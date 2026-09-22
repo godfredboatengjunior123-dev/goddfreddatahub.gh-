@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Godfred Data Hub | Fast Data via MoMo</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<style>
+:root {
+  --primary: #165DFF;
+  --secondary: #36D399;
+  --accent: #F87272;
+  --dark: #0F172A;
+  --light: #F8FAFC;
+}
+body { 
+  font-family: 'Segoe UI', sans-serif; 
+  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%); 
+  color: white; 
+  min-height: 100vh; 
+  overflow-x: hidden;
+}
+
+/* ===== ANIMATIONS ===== */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeInScale {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes pulse-glow {
+  0% { box-shadow: 0 0 5px rgba(54, 211, 153, 0.4); }
+  50% { box-shadow: 0 0 25px rgba(54, 211, 153, 0.7), 0 0 40px rgba(22, 93, 255, 0.4); }
+  100% { box-shadow: 0 0 5px rgba(54, 211, 153, 0.4); }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes bounce-slow {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes ripple {
+  0% { transform: scale(0.8); opacity: 1; }
+  100% { transform: scale(1.4); opacity: 0; }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.animate-fade-up { animation: fadeInUp 0.7s ease forwards; }
+.animate-fade-scale { animation: fadeInScale 0.5s ease forwards; }
+.animate-float { animation: float 4s ease-in-out infinite; }
+.animate-pulse-glow { animation: pulse-glow 2s infinite; }
+.animate-bounce-slow { animation: bounce-slow 2.5s ease-in-out infinite; }
+.animate-slide-left { animation: slideInLeft 0.6s ease forwards; }
+.animate-slide-right { animation: slideInRight 0.6s ease forwards; }
+
+.shimmer-bg {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.gradient-hero {
+  background: linear-gradient(90deg, #165DFF, #36D399, #165DFF);
+  background-size: 200% 100%;
+  animation: gradient-shift 4s ease infinite;
+}
+
+/* ===== CARD STYLES ===== */
+.package-card {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  opacity: 0;
+  transform: translateY(20px);
+}
+.package-card.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.package-card:hover {
+  transform: translateY(-6px) scale(1.03);
+  box-shadow: 0 20px 40px rgba(22, 93, 255, 0.25);
+}
+
+.tab-btn {
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+.tab-btn.active {
+  background: linear-gradient(135deg, #165DFF, #36D399);
+  transform: scale(1.05);
+  box-shadow: 0 8px 20px rgba(22, 93, 255, 0.35);
+}
+.tab-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+  transform: translateX(-100%);
+}
+.tab-btn:hover::after {
+  animation: shimmer 0.5s forwards;
+}
+
+.glow { box-shadow: 0 0 25px rgba(22, 93, 255, 0.4); }
+.floating-alert { position: fixed; bottom: 24px; right: 24px; z-index: 999; animation: fadeInUp 0.5s ease forwards; }
+.hidden { display: none !important; }
+.logo-gradient { 
+  background: linear-gradient(135deg, #165DFF, #36D399); 
+  -webkit-background-clip: text; 
+  -webkit-text-fill-color: transparent; 
+}
+.modal-backdrop { 
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
+  backdrop-filter: blur(8px); z-index: 300; 
+  display: flex; align-items: center; justify-content: center; padding: 1rem;
+  animation: fadeInUp 0.3s ease;
+}
+
+#canvas-container { 
+  position: absolute; top: 0; left: 0; width: 100%; height: 500px; 
+  z-index: 0; pointer-events: none; 
+}
+.section { position: relative; z-index: 1; }
+
+.chat-bubble { position: fixed; bottom: 24px; left: 24px; z-index: 100; }
+.rating-star { cursor: pointer; transition: all 0.2s ease; font-size: 1.5rem; }
+.rating-star:hover { color: gold; transform: scale(1.2); }
+
+/* Staggered card delays */
+.delay-1 { animation-delay: 0.05s; }
+.delay-2 { animation-delay: 0.1s; }
+.delay-3 { animation-delay: 0.15s; }
+.delay-4 { animation-delay: 0.2s; }
+.delay-5 { animation-delay: 0.25s; }
+.delay-6 { animation-delay: 0.3s; }
+.delay-7 { animation-delay: 0.35s; }
+.delay-8 { animation-delay: 0.4s; }
+</style>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: { primary: '#165DFF', secondary: '#36D399', accent: '#F87272', dark: '#0F172A' },
+      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
+    }
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- 3D Animated Background Canvas -->
+<div id="canvas-container"></div>
+
+<!-- Navigation -->
+<nav class="sticky top-0 z-50 bg-dark/70 backdrop-blur-xl border-b border-white/10 px-4 py-3 animate-fade-up">
+  <div class="max-w-7xl mx-auto flex justify-between items-center">
+    <a href="#" class="flex items-center gap-2">
+      <div class="w-10 h-10 rounded-full gradient-hero flex items-center justify-center font-bold text-xl animate-pulse-glow">G</div>
+      <span class="font-bold text-xl logo-gradient">Godfred Data Hub</span>
+    </a>
+    <div class="hidden md:flex gap-6 text-sm">
+      <a href="#packages" class="hover:text-secondary transition-colors">Packages</a>
+      <a href="#track" class="hover:text-secondary transition-colors">Track</a>
+      <a href="#faq" class="hover:text-secondary transition-colors">FAQ</a>
+      <a href="#feedback" class="hover:text-secondary transition-colors">Feedback</a>
+      <button onclick="openAdmin()" class="text-accent hover:underline">Admin</button>
+    </div>
+    <button class="md:hidden text-2xl" onclick="toggleMobileMenu()"><i class="fa fa-bars"></i></button>
+  </div>
+  <div id="mobile-menu" class="hidden md:hidden mt-3 space-y-2 px-2 animate-fade-up">
+    <a href="#packages" class="block py-2 hover:text-secondary">Packages</a>
+    <a href="#track" class="block py-2 hover:text-secondary">Track</a>
+    <a href="#faq" class="block py-2 hover:text-secondary">FAQ</a>
+    <a href="#feedback" class="block py-2 hover:text-secondary">Feedback</a>
+    <button onclick="openAdmin()" class="block py-2 text-accent">Admin Login</button>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<header class="section min-h-[90vh] flex flex-col items-center justify-center text-center px-4 py-16">
+  <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-fade-up" style="animation-delay: 0.1s;">
+    Buy Data Instantly<br>
+    <span class="text-secondary animate-bounce-slow inline-block">MTN • AirtelTigo • Telecel</span>
+  </h1>
+  <p class="text-lg text-gray-300 max-w-xl mb-8 animate-fade-up" style="animation-delay: 0.2s;">
+    Pay via MoMo — Delivered in seconds. Fast, affordable, reliable.
+  </p>
+  <a href="#packages" class="gradient-hero px-8 py-3 rounded-full text-lg font-medium transition-all hover:scale-105 animate-pulse-glow animate-fade-up" style="animation-delay: 0.3s;">
+    Get Started <i class="fa fa-arrow-down ml-2 animate-bounce"></i>
+  </a>
+  <div class="mt-10 flex flex-wrap justify-center gap-4 animate-fade-up" style="animation-delay: 0.4s;">
+    <a href="https://whatsapp.com/channel/0029VbEYidXGpLHS9AxCAO2D" target="_blank" 
+       class="bg-green-600/80 hover:bg-green-600 px-5 py-3 rounded-full flex items-center gap-2 font-medium transition-all hover:scale-105 hover:shadow-lg">
+      <i class="fa fa-whatsapp text-xl"></i> WhatsApp
+    </a>
+    <a href="https://t.me/+KjvJo-i7ln44MDc0" target="_blank" 
+       class="bg-sky-500/80 hover:bg-sky-500 px-5 py-3 rounded-full flex items-center gap-2 font-medium transition-all hover:scale-105 hover:shadow-lg">
+      <i class="fa fa-telegram text-xl"></i> Telegram
+    </a>
+  </div>
+</header>
+
+<!-- Floating Purchase Alert -->
+<div id="purchase-alert" class="floating-alert hidden bg-dark/90 backdrop-blur border border-secondary/30 rounded-lg p-3 max-w-xs shadow-xl">
+  <div class="flex items-start gap-3">
+    <div class="text-secondary text-xl animate-float"><i class="fa fa-check-circle"></i></div>
+    <div>
+      <p class="text-sm font-medium"><span id="buyer-name">Someone</span> just bought data!</p>
+      <p class="text-xs text-gray-400">Delivered: <span id="deliver-time">--:--</span></p>
+    </div>
+  </div>
+</div>
+
+<!-- Packages Section -->
+<section id="packages" class="section px-4 py-16 max-w-6xl mx-auto">
+  <h2 class="text-3xl font-bold text-center mb-4 animate-fade-up">📦 Choose Your Network</h2>
+  <p class="text-center text-gray-400 mb-10 animate-fade-up" style="animation-delay: 0.1s;">Click a network to see available data bundles</p>
+  
+  <!-- Network Tabs -->
+  <div class="flex flex-wrap justify-center gap-4 mb-10 animate-fade-up" style="animation-delay: 0.2s;">
+    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium" data-network="mtn">
+      <i class="fa fa-mobile-phone mr-2 text-xl"></i> MTN
+    </button>
+    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium" data-network="airteltigo">
+      <i class="fa fa-mobile-phone mr-2 text-xl"></i> AirtelTigo
+    </button>
+    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium" data-network="telecel">
+      <i class="fa fa-mobile-phone mr-2 text-xl"></i> Telecel
+    </button>
+  </div>
+
+  <!-- Buyer Number -->
+  <div class="max-w-md mx-auto mb-8 bg-white/5 p-5 rounded-xl border border-white/10 animate-fade-up" style="animation-delay: 0.3s;">
+    <label class="block text-sm mb-2">Your Phone Number</label>
+    <div class="flex gap-2">
+      <input type="tel" id="buyer-number" placeholder="054XXXXXXX" 
+        class="flex-1 px-4 py-3 rounded-lg bg-white/10 border border-white/20 focus:border-primary outline-none transition-colors"
+        oninput="detectNetwork(this.value)">
+      <span id="detected-network" class="flex items-center px-3 text-sm font-medium text-gray-500">—</span>
+    </div>
+  </div>
+
+  <!-- Packages Container — Appears When Network Selected -->
+  <div id="packages-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+    <p class="col-span-full text-center text-gray-500 py-10 animate-fade-scale">👆 Click a network above to view packages</p>
+  </div>
+</section>
+
+<!-- Track Section -->
+<section id="track" class="section px-4 py-16 max-w-xl mx-auto">
+  <h2 class="text-3xl font-bold text-center mb-8 animate-fade-up">🔍 Track Your Order</h2>
+  <div class="bg-white/5 p-6 rounded-xl border border-white/10 animate-fade-up" style="animation-delay: 0.1s;">
+    <input type="tel" id="track-number" placeholder="Enter your phone number" 
+      class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 mb-4 focus:border-primary outline-none transition-colors">
+    <button onclick="checkOrderStatus()" class="w-full bg-primary hover:bg-primary/90 py-3 rounded-lg font-medium transition-all hover:scale-[1.02]">
+      Check Status <i class="fa fa-search ml-2"></i>
+    </button>
+    <div id="track-result" class="mt-5 hidden animate-fade-scale"></div>
+  </div>
+</section>
+
+<!-- FAQ Section -->
+<section id="faq" class="section px-4 py-16 max-w-2xl mx-auto">
+  <h2 class="text-3xl font-bold text-center mb-10 animate-fade-up">❓ FAQ</h2>
+  <div id="faq-container" class="space-y-4">
+    <!-- Populated by JS -->
+  </div>
+</section>
+
+<!-- Feedback Section -->
+<section id="feedback" class="section px-4 py-16 max-w-xl mx-auto">
+  <h2 class="text-3xl font-bold text-center mb-8 animate-fade-up">⭐ Rate Us</h2>
+  <div class="bg-white/5 p-6 rounded-xl border border-white/10 animate-fade-up" style="animation-delay: 0.1s;">
+    <div class="flex justify-center gap-2 text-4xl mb-6" id="rating-stars">
+      <span class="rating-star text-gray-500" data-val="1">★</span>
+      <span class="rating-star text-gray-500" data-val="2">★</span>
+      <span class="rating-star text-gray-500" data-val="3">★</span>
+      <span class="rating-star text-gray-500" data-val="4">★</span>
+      <span class="rating-star text-gray-500" data-val="5">★</span>
+    </div>
+    <textarea id="feedback-text" rows="3" placeholder="Your feedback..."
+      class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 mb-4 focus:border-primary outline-none transition-colors"></textarea>
+    <button onclick="submitFeedback()" class="w-full bg-secondary hover:bg-secondary/90 py-3 rounded-lg font-medium transition-all hover:scale-[1.02]">
+      Submit <i class="fa fa-paper-plane ml-1"></i>
+    </button>
+    <p id="feedback-msg" class="mt-4 text-center text-secondary hidden">Thank you! ✅</p>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="border-t border-white/10 py-8 px-4 text-center text-sm text-gray-400">
+  <p class="mb-2">© 2026 Godfred Data Hub</p>
+  <p>MTN • AirtelTigo • Telecel — Pay via MoMo</p>
+</footer>
+
+<!-- Chatbot -->
+<div class="chat-bubble">
+  <button onclick="toggleChat()" class="w-14 h-14 rounded-full bg-primary flex items-center justify-center text-xl animate-pulse-glow">
+    <i class="fa fa-comments"></i>
+  </button>
+  <div id="chat-box" class="hidden absolute bottom-16 left-0 w-80 bg-dark border border-white/10 rounded-xl shadow-2xl overflow-hidden animate-fade-scale">
+    <div class="bg-primary/20 px-4 py-3 font-medium border-b border-white/10 flex justify-between items-center">
+      <span>Assistant</span>
+      <button onclick="toggleChat()" class="text-gray-400 hover:text-white"><i class="fa fa-times"></i></button>
+    </div>
+    <div id="chat-messages" class="h-72 overflow-y-auto p-4 space-y-3 text-sm">
+      <p class="text-gray-300 animate-fade-up">👋 Hi! How can I help you buy data?</p>
+    </div>
+    <div class="p-3 border-t border-white/10 flex gap-2">
+      <input type="text" id="chat-input" placeholder="Ask me anything..." 
+        class="flex-1 px-3 py-2 rounded-lg bg-white/10 border border-white/20 outline-none text-sm"
+        onkeydown="if(event.key==='Enter')sendChat()">
+      <button onclick="sendChat()" class="bg-primary px-3 rounded-lg hover:bg-primary/90"><i class="fa fa-paper-plane"></i></button>
+    </div>
+  </div>
+</div>
+
+<!-- MoMo Payment Modal -->
+<div id="payment-modal" class="hidden modal-backdrop">
+  <div class="bg-dark border border-white/10 rounded-xl max-w-md w-full p-6 animate-fade-scale">
+    <div class="flex justify-between items-center mb-5">
+      <h3 class="text-xl font-bold">💳 MoMo Payment</h3>
+      <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white text-xl"><i class="fa fa-times"></i></button>
+    </div>
+    
+    <div id="pay-step-1" class="payment-step">
+      <div class="bg-white/5 p-4 rounded-lg mb-5 animate-fade-up">
+        <p class="mb-2"><strong>Package:</strong> <span id="pay-pkg"></span></p>
+        <p class="mb-2"><strong>Network:</strong> <span id="pay-net"></span></p>
+        <p class="mb-2"><strong>Send to:</strong> <span id="pay-phone"></span></p>
+        <p class="text-xl font-bold text-secondary mt-2">GH₵ <span id="pay-amount"></span></p>
+      </div>
+      
+      <p class="mb-3 font-medium">Pay With:</p>
+      <div class="space-y-3 mb-5">
+        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:border-yellow-400 transition-all">
+          <input type="radio" name="momo-method" value="mtn" class="accent-primary">
+          <span class="font-bold text-yellow-400">MTN MoMo</span>
+        </label>
+        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:border-red-400 transition-all">
+          <input type="radio" name="momo-method" value="airteltigo" class="accent-primary">
+          <span class="font-bold text-red-400">AirtelTigo Money</span>
+        </label>
+        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-lg border border-white/10 cursor-pointer hover:border-green-400 transition-all">
+          <input type="radio" name="momo-method" value="telecel" class="accent-primary">
+          <span class="font-bold text-green-400">Telecel Cash</span>
+        </label>
+      </div>
+      
+      <label class="block text-sm mb-2">Your MoMo Number</label>
+      <input type="tel" id="momo-number" placeholder="e.g. 054XXXXXXX" 
+        class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 mb-4 focus:border-primary outline-none transition-colors">
+      
+      <button onclick="initiatePayment()" class="w-full bg-secondary hover:bg-secondary/90 py-3 rounded-lg font-medium transition-all hover:scale-[1.02] animate-pulse-glow">
+        ⚡ Pay & Get Data
+      </button>
+    </div>
+    
+    <div id="pay-step-2" class="payment-step hidden text-center py-6">
+      <div class="text-5xl mb-4 animate-float">📲</div>
+      <h4 class="text-lg font-bold mb-2">Payment Sent!</h4>
+      <p class="text-sm text-gray-400 mb-4">Check your phone — enter PIN to confirm</p>
+      <div class="bg-white/5 p-4 rounded-lg mb-5">
+        <p>Amount: <span class="font-bold text-secondary">GH₵ <span id="confirm-amount"></span></span></p>
+        <p class="text-xs text-gray-400 mt-1">Ref: <span id="confirm-ref"></span></p>
+      </div>
+      <button onclick="verifyPayment()" id="verify-btn" class="w-full bg-primary hover:bg-primary/90 py-3 rounded-lg font-medium mb-3 transition-all">
+        ✅ I Have Paid
+      </button>
+      <p id="payment-status" class="text-xs text-gray-400">Waiting for confirmation...</p>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Modal -->
+<div id="admin-modal" class="hidden modal-backdrop">
+  <div class="bg-dark border border-white/10 rounded-xl max-w-3xl w-full max-h-[90vh] overflow-y-auto p-6 animate-fade-scale">
+    <div class="flex justify-between items-center mb-6">
+      <h3 class="text-2xl font-bold">⚙️ Admin — Price Manager</h3>
+      <button onclick="closeAdmin()" class="text-gray-400 hover:text-white text-xl">&times;</button>
+    </div>
+    <div id="admin-login">
+      <input type="password" id="admin-pass" placeholder="Enter admin password" 
+        class="w-full px-4 py-3 rounded-lg bg-white/10 border border-white/20 mb-4">
+      <button onclick="verifyAdmin()" class="bg-primary px-6 py-2 rounded-lg hover:bg-primary/90 transition-colors">Login</button>
+    </div>
+    <div id="admin-panel" class="hidden">
+      <p class="text-secondary mb-4">✅ Logged in — Edit prices below</p>
+      <div id="price-editor" class="space-y-6"></div>
+      <button onclick="saveAllPrices()" class="mt-6 bg-secondary px-6 py-3 rounded-lg font-medium hover:bg-secondary/90 transition-colors">
+        💾 Save Changes
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ========== CONFIG ==========
+const CONFIG = {
+  whatsappUrl: "https://whatsapp.com/channel/0029VbEYidXGpLHS9AxCAO2D",
+  telegramUrl: "https://t.me/+KjvJo-i7ln44MDc0",
+  secretKey: "sk_test_07ed82ed9cf948b2f705205ad30f2e9e4ad56c02",
+  publicKey: "pk_test_a0c01bd6c8726bda6da281c7e2b6b6823c344c4a",
+  techLinkToken: "techlink-tlg_live_ddf58cfe64152a266dac98326d68a3bd5386ba32d2dc44dd",
+  techLinkApiUrl: "https://api.techlink.com.gh/v1/purchase",
+  momoApiUrl: "https://api.techlink.com.gh/v1/payment/charge",
+  adminPassword: "godfred123"
+};
+
+// ========== SMALL PACKAGES ==========
+const defaultPackages = {
+  mtn: [
+    {size: "100MB", price: "1.00", valid: "1D"},
+    {size: "250MB", price: "2.00", valid: "1D"},
+    {size: "500MB", price: "3.50", valid: "1D"},
+    {size: "750MB", price: "5.00", valid: "1D"},
+    {size: "1GB", price: "6.00", valid: "3D"},
+    {size: "1.5GB", price: "8.00", valid: "3D"},
+    {size: "2GB", price: "10.00", valid: "7D"},
+    {size: "3GB", price: "14.00", valid: "7D"},
+    {size: "4GB", price: "18.00", valid: "14D"},
+    {size: "5GB", price: "22.00", valid: "14D"},
+    {size: "8GB", price: "32.00", valid: "30D"},
+    {size: "10GB", price: "38.00", valid: "30D"},
+    {size: "15GB", price: "55.00", valid: "30D"},
+    {size: "20GB", price: "70.00", valid: "60D"},
+    {size: "30GB", price: "98.00", valid: "90D"},
+    {size: "50GB", price: "150.00", valid: "90D"},
+  ],
+  airteltigo: [
+    {size: "100MB", price: "0.90", valid: "1D"},
+    {size: "250MB", price: "1.80", valid: "1D"},
+    {size: "500MB", price: "3.20", valid: "1D"},
+    {size: "750MB", price: "4.50", valid: "1D"},
+    {size: "1GB", price: "5.50", valid: "3D"},
+    {size: "1.5GB", price: "7.50", valid: "3D"},
+    {size: "2GB", price: "9.00", valid: "7D"},
+    {size: "3GB", price: "12.50", valid: "7D"},
+    {size: "4GB", price: "16.00", valid: "14D"},
+    {size: "5GB", price: "20.00", valid: "14D"},
+    {size: "8GB", price: "29.00", valid: "30D"},
+    {size: "10GB", price: "35.00", valid: "30D"},
+    {size: "15GB", price: "50.00", valid: "30D"},
+    {size: "20GB", price: "65.00", valid: "60D"},
+    {size: "30GB", price: "90.00", valid: "90D"},
+    {size: "50GB", price: "135.00", valid: "90D"},
+  ],
+  telecel: [
+    {size: "100MB", price: "0.80", valid: "1D"},
+    {size: "250MB", price: "1.60", valid: "1D"},
+    {size: "500MB", price: "3.00", valid: "1D"},
+    {size: "750MB", price: "4.20", valid: "1D"},
+    {size: "1GB", price: "5.00", valid: "3D"},
+    {size: "1.5GB", price: "7.00", valid: "3D"},
+    {size: "2GB", price: "8.50", valid: "7D"},
+    {size: "3GB", price: "11.50", valid: "7D"},
+    {size: "4GB", price: "15.00", valid: "14D"},
+    {size: "5GB", price: "18.50", valid: "14D"},
+    {size: "8GB", price: "27.00", valid: "30D"},
+    {size: "10GB", price: "32.00", valid: "30D"},
+    {size: "15GB", price: "46.00", valid: "30D"},
+    {size: "20GB", price: "60.00", valid: "60D"},
+    {size: "30GB", price: "83.00", valid: "90D"},
+    {size: "50GB", price: "125.00", valid: "90D"},
+  ]
+};
+
+let saved = localStorage.getItem('gdhub_prices');
+let packages = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPackages));
+let activeNetwork = null;
+let orders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
+let selectedRating = 0;
+let currentPurchase = null;
+
+// ========== RENDER PACKAGES (ONLY AFTER NETWORK SELECTED) ==========
+function renderPackages() {
+  const container = document.getElementById('packages-container');
+  
+  if (!activeNetwork) {
+    container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-10 animate-fade-scale">👆 Click a network above to view packages</p>';
+    return;
+  }
+
+  const list = packages[activeNetwork];
+  const colors = {
+    mtn: 'from-yellow-500 to-amber-500',
+    airteltigo: 'from-red-500 to-rose-500',
+    telecel: 'from-green-500 to-emerald-500'
+  };
+
+  container.innerHTML = list.map((pkg, idx) => `
+    <div class="package-card visible delay-${(idx % 8) + 1} bg-white/5 rounded-xl overflow-hidden border border-white/10 text-center">
+      <div class="h-1.5 bg-gradient-to-r ${colors[activeNetwork]}"></div>
+      <div class="p-3">
+        <h3 class="text-lg font-bold">${pkg.size}</h3>
+        <p class="text-xs text-gray-400">${pkg.valid}</p>
+        <p class="text-lg font-bold text-secondary my-2">GH₵${pkg.price}</p>
+        <button onclick="startPurchase('${activeNetwork}', ${idx})" 
+          class="w-full bg-primary/80 hover:bg-primary py-2 rounded-lg text-sm font-medium transition-all">
+          Buy
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// Network tab click — SHOW PACKAGES
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    activeNetwork = btn.dataset.network;
+    renderPackages();
+  });
+});
+
+// ========== NETWORK DETECTION ==========
+function detectNetwork(num) {
+  const label = document.getElementById('detected-network');
+  const clean = num.replace(/\D/g, '');
+  let net = null;
+  if (/^(024|054|055|059)/.test(clean)) net = 'MTN';
+  else if (/^(020|050|051)/.test(clean)) net = 'AirtelTigo';
+  else if (/^(027|057|058)/.test(clean)) net = 'Telecel';
+  
+  label.textContent = net || '—';
+  label.className = net ? 'flex items-center px-3 text-sm font-medium text-secondary' 
+                       : 'flex items-center px-3 text-sm font-medium text-gray-500';
+  return net;
+}
+
+// ========== PURCHASE FLOW ==========
+function startPurchase(net, idx) {
+  const number = document.getElementById('buyer-number').value.trim();
+  if (!number || number.length < 9) {
+    alert('⚠️ Enter your phone number first');
+    return;
+  }
+  const detected = detectNetwork(number);
+  if (!detected || detected.toLowerCase() !== net) {
+    alert(`⚠️ Selected ${net.toUpperCase()} but detected ${detected || 'unknown'}`);
+    return;
+  }
+
+  const pkg = packages[net][idx];
+  currentPurchase = {
+    network: net,
+    package: pkg,
+    phone: number,
+    orderId: 'GD-' + Date.now()
+  };
+
+  document.getElementById('pay-pkg').textContent = `${pkg.size} (${pkg.valid})`;
+  document.getElementById('pay-net').textContent = net.toUpperCase();
+  document.getElementById('pay-phone').textContent = number;
+  document.getElementById('pay-amount').textContent = pkg.price;
+  
+  document.getElementById('payment-modal').classList.remove('hidden');
+  document.getElementById('pay-step-1').classList.remove('hidden');
+  document.getElementById('pay-step-2').classList.add('hidden');
+}
+
+function closePaymentModal() {
+  document.getElementById('payment-modal').classList.add('hidden');
+  currentPurchase = null;
+}
+
+async function initiatePayment() {
+  const methodEl = document.querySelector('input[name="momo-method"]:checked');
+  if (!methodEl) { alert('⚠️ Select payment method'); return; }
+  
+  const momoNumber = document.getElementById('momo-number').value.trim();
+  if (!momoNumber || momoNumber.length < 9) { alert('⚠️ Enter your MoMo number'); return; }
+
+  document.getElementById('pay-step-1').classList.add('hidden');
+  document.getElementById('pay-step-2').classList.remove('hidden');
+  document.getElementById('confirm-amount').textContent = currentPurchase.package.price;
+  document.getElementById('confirm-ref').textContent = currentPurchase.orderId;
+  document.getElementById('payment-status').textContent = "📲 Check your phone...";
+
+  try {
+    await fetch(CONFIG.momoApiUrl, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${CONFIG.techLinkToken}` },
+      body: JSON.stringify({
+        amount: parseFloat(currentPurchase.package.price),
+        currency: 'GHS',
+        phone: momoNumber,
+        reference: currentPurchase.orderId
+      })
+    });
+  } catch (e) { /* demo */ }
+}
+
+async function verifyPayment() {
+  const btn = document.getElementById('verify-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Verifying...';
+
+  setTimeout(async () => {
+    const order = {
+      id: currentPurchase.orderId,
+      network: currentPurchase.network,
+      number: currentPurchase.phone,
+      package: `${currentPurchase.package.size} — GH₵${currentPurchase.package.price}`,
+      ordered: new Date().toLocaleTimeString(),
+      delivered: new Date().toLocaleTimeString(),
+      status: 'delivered',
+      payment_status: 'paid'
+    };
+    orders.unshift(order);
+    localStorage.setItem('gdhub_orders', JSON.stringify(orders));
+    
+    showPurchaseAlert(order);
+    alert(`✅ Delivered!\n${currentPurchase.package.size}\n→ ${currentPurchase.phone}`);
+    closePaymentModal();
+  }, 1500);
+}
+
+function showPurchaseAlert(order) {
+  const alertBox = document.getElementById('purchase-alert');
+  document.getElementById('buyer-name').textContent = order.number.replace(/(\d{3})\d+(\d{2})/, '$1****$2');
+  document.getElementById('deliver-time').textContent = order.delivered;
+  alertBox.classList.remove('hidden');
+  setTimeout(() => alertBox.classList.add('hidden'), 6000);
+}
+
+// ========== TRACK ORDER ==========
+function checkOrderStatus() {
+  const num = document.getElementById('track-number').value.trim();
+  const matches = orders.filter(o => o.number.includes(num));
+  const resultDiv = document.getElementById('track-result');
+  
+  if (!matches.length) {
+    resultDiv.classList.remove('hidden');
+    resultDiv.innerHTML = `<p class="text-accent">No order found.</p>`;
+    return;
+  }
+  const o = matches[0];
+  resultDiv.classList.remove('hidden');
+  resultDiv.innerHTML = `
+    <div class="p-4 rounded-lg bg-white/5 animate-fade-up">
+      <p><strong>Package:</strong> ${o.package}</p>
+      <p><strong>Status:</strong> <span class="text-secondary font-bold">${o.status.toUpperCase()}</span></p>
+      <p><strong>Delivered:</strong> ${o.delivered || 'Pending'}</p>
+    </div>
+  `;
+}
+
+// ========== FAQ ==========
+const faqs = [
+  {q: "How do I buy?", a: "1. Click your network → 2. Enter your number → 3. Select package → 4. Pay via MoMo → Data delivers instantly!"},
+  {q: "Which networks?", a: "MTN, AirtelTigo & Telecel — all supported."},
+  {q: "Can I send to another number?", a: "Yes! Enter their number as the recipient, pay from your MoMo."},
+  {q: "Paid but no data?", a: "Check Track Order. Still stuck? Message us on WhatsApp."}
+];
+document.getElementById('faq-container').innerHTML = faqs.map((f, i) => `
+  <div class="bg-white/5 p-4 rounded-lg border border-white/10 animate-fade-up" style="animation-delay: ${i*0.1}s;">
+    <p class="font-medium mb-1">${f.q}</p>
+    <p class="text-gray-400 text-sm">${f.a}</p>
+  </div>
+`).join('');
+
+// ========== FEEDBACK ==========
+document.querySelectorAll('.rating-star').forEach(star => {
+  star.addEventListener('click', () => {
+    selectedRating = parseInt(star.dataset.val);
+    document.querySelectorAll('.rating-star').forEach(s => {
+      s.style.color = parseInt(s.dataset.val) <= selectedRating ? 'gold' : '#6B7280';
+      s.style.transform = parseInt(s.dataset.val) <= selectedRating ? 'scale(1.1)' : 'scale(1)';
+    });
+  });
+});
+function submitFeedback() {
+  if (!selectedRating || !document.getElementById('feedback-text').value.trim()) {
+    alert('Please rate and write a comment'); return;
+  }
+  document.getElementById('feedback-msg').classList.remove('hidden');
+  document.getElementById('feedback-text').value = '';
+  selectedRating = 0;
+  document.querySelectorAll('.rating-star').forEach(s => { s.style.color = '#6B7280'; s.style.transform = 'scale(1)'; });
+}
+
+// ========== CHATBOT ==========
+function toggleChat() { document.getElementById('chat-box').classList.toggle('hidden'); }
+function sendChat() {
+  const input = document.getElementById('chat-input');
+  const msg = input.value.trim();
+  if (!msg) return;
+  const container = document.getElementById('chat-messages');
+  container.innerHTML += `<p class="text-right text-primary">${msg}</p>`;
+  input.value = '';
+  
+  setTimeout(() => {
+    const lower = msg.toLowerCase();
+    let reply = "Click your network above, pick a package, pay with MoMo — done! 💜";
+    if (lower.includes('price') || lower.includes('cost')) reply = "Prices from GH₵0.80 — GH₵150. Click a network to see all options.";
+    if (lower.includes('help') || lower.includes('contact')) reply = "Message us on WhatsApp for fast support!";
+    container.innerHTML += `<p class="text-left text-gray-300 animate-fade-up">🤖 ${reply}</p>`;
+    container.scrollTop = container.scrollHeight;
+  }, 600);
+}
+
+// ========== ADMIN ==========
+function openAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
+function closeAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
+function verifyAdmin() {
+  if (document.getElementById('admin-pass').value === CONFIG.adminPassword) {
+    document.getElementById('admin-login').classList.add('hidden');
+    document.getElementById('admin-panel').classList.remove('hidden');
+    document.getElementById('price-editor').innerHTML = Object.entries(packages).map(([net, list]) => `
+      <div>
+        <h4 class="font-bold mb-3 capitalize">${net}</h4>
+        <div class="grid grid-cols-3 gap-2">
+          ${list.map((pkg, i) => `
+            <div class="bg-white/5 p-2 rounded">
+              <p class="text-xs">${pkg.size}</p>
+              <input type="text" value="${pkg.price}" data-net="${net}" data-idx="${i}" class="w-full px-2 py-1 rounded bg-white/10 text-xs mt-1">
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  } else alert('❌ Wrong password');
+}
+function saveAllPrices() {
+  document.querySelectorAll('#price-editor input').forEach(inp => {
+    packages[inp.dataset.net][parseInt(inp.dataset.idx)].price = inp.value.trim();
+  });
+  localStorage.setItem('gdhub_prices', JSON.stringify(packages));
+  renderPackages();
+  alert('✅ Saved!');
+}
+function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+
+// ========== 3D BACKGROUND ==========
+function init3D() {
+  const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / 500, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(window.innerWidth, 500);
+  container.appendChild(renderer.domElement);
+
+  const geometry = new THREE.BufferGeometry();
+  const count = 200;
+  const positions = new Float32Array(count * 3);
+  for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 30;
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+  
+  const material = new THREE.PointsMaterial({ color: 0x165DFF, size: 0.12, transparent: true, opacity: 0.6 });
+  const points = new THREE.Points(geometry, material);
+  scene.add(points);
+
+  camera.position.z = 10;
+  function animate() {
+    requestAnimationFrame(animate);
+    points.rotation.x += 0.0005;
+    points.rotation.y += 0.001;
+    renderer.render(scene, camera);
+  }
+  animate();
+  window.addEventListener('resize', () => renderer.setSize(window.innerWidth, 500));
+}
+
+// Initialize
+init3D();
+</script>
+</body>
+</html>
