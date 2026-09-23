@@ -234,12 +234,12 @@ tailwind.config = {
       <div class="w-10 h-10 rounded-full gradient-hero flex items-center justify-center font-bold text-xl animate-pulse-glow">G</div>
       <span class="font-bold text-xl logo-gradient">Godfred Data Hub</span>
     </a>
-    <div class="hidden md:flex gap-6 text-sm">
+    <div class="hidden md:flex gap-6 text-sm items-center">
       <a href="#packages" class="hover:text-secondary transition-colors">Packages</a>
       <a href="#track" class="hover:text-secondary transition-colors">Track Order</a>
       <a href="#faq" class="hover:text-secondary transition-colors">FAQ</a>
       <a href="#feedback" class="hover:text-secondary transition-colors">Feedback</a>
-      <button onclick="openAdmin()" class="text-accent hover:underline font-semibold">Admin</button>
+      <button onclick="openAdmin()" class="text-accent hover:underline font-semibold bg-accent/10 px-3 py-1 rounded-lg border border-accent/20">Admin</button>
     </div>
     <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
@@ -250,7 +250,7 @@ tailwind.config = {
     <a href="#track" class="block py-2 hover:text-secondary">Track Order</a>
     <a href="#faq" class="block py-2 hover:text-secondary">FAQ</a>
     <a href="#feedback" class="block py-2 hover:text-secondary">Feedback</a>
-    <button onclick="openAdmin()" class="block py-2 text-accent">Admin Login</button>
+    <button onclick="openAdmin()" class="block py-2 text-accent font-semibold">Admin Login</button>
   </div>
 </nav>
 
@@ -509,7 +509,8 @@ tailwind.config = {
 
 <!-- Admin Portal -->
 <div id="admin-modal" class="hidden modal-backdrop p-0 items-stretch justify-start z-[999]">
-  <div class="flex w-full h-full bg-slate-50 text-slate-800 overflow-hidden">
+  <div class="flex flex-col sm:flex-row w-full h-full bg-slate-50 text-slate-800 overflow-hidden">
+    <!-- Desktop Admin Sidebar -->
     <aside class="w-64 bg-white border-r border-slate-200 p-6 flex-shrink-0 hidden sm:flex flex-col justify-between">
       <div>
         <div class="flex items-center gap-2 mb-8">
@@ -518,52 +519,99 @@ tailwind.config = {
         </div>
         <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Navigation</p>
         <nav class="space-y-1">
-          <div class="p-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold cursor-pointer" onclick="switchAdminTab('dashboard')">Dashboard</div>
-          <div class="p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600" onclick="switchAdminTab('packages')">Data Packages</div>
-          <div class="p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600" onclick="switchAdminTab('sales')">Sales &amp; Orders</div>
+          <div class="adm-nav-item p-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold cursor-pointer transition-colors" onclick="switchAdminTab('dashboard')">Dashboard</div>
+          <div class="adm-nav-item p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600 transition-colors" onclick="switchAdminTab('packages')">Data Packages</div>
+          <div class="adm-nav-item p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600 transition-colors" onclick="switchAdminTab('sales')">Sales &amp; Orders</div>
         </nav>
       </div>
-      <button onclick="closeAdmin()" class="w-full py-2.5 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200">Close Portal</button>
+      <button onclick="closeAdmin()" class="w-full py-2.5 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200 transition-colors">Close Portal</button>
     </aside>
-    <main class="flex-1 overflow-y-auto p-6 sm:p-10">
-      <div class="flex justify-between items-center mb-6">
+
+    <!-- Mobile Admin Top Navigation -->
+    <div class="sm:hidden flex items-center justify-between border-b border-slate-200 p-4 bg-white">
+      <div class="flex items-center gap-2">
+        <div class="w-7 h-7 rounded-lg gradient-hero flex items-center justify-center text-white font-bold text-xs">G</div>
+        <span class="font-bold text-sm text-emerald-800">Admin Control</span>
+      </div>
+      <button onclick="closeAdmin()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
+    </div>
+    <div id="admin-mobile-nav" class="sm:hidden hidden flex gap-2 border-b border-slate-200 p-3 bg-white overflow-x-auto text-xs font-semibold">
+      <button onclick="switchAdminTab('dashboard')" class="adm-mob-btn px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold whitespace-nowrap">Dashboard</button>
+      <button onclick="switchAdminTab('packages')" class="adm-mob-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 whitespace-nowrap">Data Packages</button>
+      <button onclick="switchAdminTab('sales')" class="adm-mob-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 whitespace-nowrap">Sales Logs</button>
+    </div>
+
+    <!-- Admin Content Main Area -->
+    <main class="flex-1 overflow-y-auto p-4 sm:p-10">
+      <div class="hidden sm:flex justify-between items-center mb-6">
         <h2 class="text-2xl font-bold text-slate-900" id="admin-page-title">⚙️ Admin Control Center</h2>
-        <button onclick="closeAdmin()" class="text-slate-400 hover:text-slate-700 text-2xl">&times;</button>
+        <button onclick="closeAdmin()" class="text-slate-400 hover:text-slate-700 text-2xl font-bold">&times;</button>
       </div>
 
+      <!-- Admin Login Screen -->
       <div id="admin-login" class="flex items-center justify-center min-h-[50vh]">
         <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-slate-100">
-          <h3 class="text-xl font-bold mb-2">Admin Sign In</h3>
-          <p class="text-sm text-slate-500 mb-5">Enter your administrative passcode</p>
-          <input type="password" id="admin-pass" placeholder="Enter password" 
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none focus:border-emerald-500">
-          <button onclick="verifyAdmin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg">Sign In</button>
+          <h3 class="text-xl font-bold mb-2 text-slate-900">Admin Sign In</h3>
+          <p class="text-sm text-slate-500 mb-5">Enter administrative passcode to continue</p>
+          <input type="password" id="admin-pass" placeholder="Enter password (default: godfred123)" 
+            class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none focus:border-emerald-500 text-slate-800"
+            onkeydown="if(event.key==='Enter')verifyAdmin()">
+          <button onclick="verifyAdmin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all">Sign In</button>
         </div>
       </div>
 
+      <!-- Admin Dashboard Main Panel -->
       <div id="admin-panel" class="hidden">
+        <!-- Tab 1: Dashboard Overview -->
         <div id="adm-tab-dashboard" class="adm-tab active">
           <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md"><p class="text-xs opacity-80 uppercase">Today's Sales</p><p class="text-3xl font-bold mt-1" id="adm-stat-sales">0</p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Estimated Profit</p><p class="text-3xl font-bold text-emerald-600 mt-1">GH₵<span id="adm-stat-profit">0.00</span></p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Bundles Delivered</p><p class="text-3xl font-bold text-slate-800 mt-1" id="adm-stat-packages">0</p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Total Visits</p><p class="text-3xl font-bold text-slate-800 mt-1" id="adm-stat-visitors">0</p></div>
+            <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md">
+              <p class="text-xs opacity-80 uppercase font-bold tracking-wider">Today's Sales</p>
+              <p class="text-2xl sm:text-3xl font-bold mt-1" id="adm-stat-sales">GH₵0.00</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Estimated Profit</p>
+              <p class="text-2xl sm:text-3xl font-bold text-emerald-600 mt-1">GH₵<span id="adm-stat-profit">0.00</span></p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Bundles Delivered</p>
+              <p class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1" id="adm-stat-packages">0</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Visits</p>
+              <p class="text-2xl sm:text-3xl font-bold text-slate-800 mt-1" id="adm-stat-visitors">0</p>
+            </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Recent Transactions</h4>
+
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 class="font-bold text-slate-800 mb-4 text-base">Recent Transactions</h4>
             <div id="adm-recent-orders" class="text-sm text-slate-600">No recent orders yet.</div>
           </div>
         </div>
+
+        <!-- Tab 2: Pricing & Package Editor -->
         <div id="adm-tab-packages" class="adm-tab hidden">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Edit Package Prices</h4>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-6">
+              <div>
+                <h4 class="font-bold text-slate-800 text-base">Edit Package Prices &amp; Costs</h4>
+                <p class="text-xs text-slate-500">Update sell rates and wholesale cost prices across networks</p>
+              </div>
+              <button onclick="saveAllPrices()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl transition-all text-xs sm:text-sm shadow-md">
+                💾 Save All Changes
+              </button>
+            </div>
             <div id="price-editor" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-            <button onclick="saveAllPrices()" class="mt-6 bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl">Save All Changes</button>
+            <button onclick="saveAllPrices()" class="mt-6 w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3 rounded-xl transition-all shadow-md">
+              Save All Changes
+            </button>
           </div>
         </div>
+
+        <!-- Tab 3: Sales Logs & History -->
         <div id="adm-tab-sales" class="adm-tab hidden">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Full Order Logs</h4>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 class="font-bold text-slate-800 mb-4 text-base">Full Order Logs</h4>
             <div id="adm-all-sales" class="text-sm text-slate-600">No sales recorded.</div>
           </div>
         </div>
@@ -620,6 +668,14 @@ let packages = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPack
 let activeNetwork = null;
 let orders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
 let currentPurchase = null;
+
+// Track Unique Visits
+let visitors = parseInt(localStorage.getItem('gdhub_visitors') || '0', 10);
+if (!sessionStorage.getItem('gdhub_visited')) {
+  visitors++;
+  localStorage.setItem('gdhub_visitors', visitors.toString());
+  sessionStorage.setItem('gdhub_visited', 'true');
+}
 
 // ========== TOAST NOTIFICATION SYSTEM ==========
 function showToast(msg, type = 'info') {
@@ -728,7 +784,7 @@ function renderPackages() {
   `).join('');
 
   setTimeout(() => {
-    const list = packages[activeNetwork];
+    const list = packages[activeNetwork] || [];
 
     container.innerHTML = list.map((pkg, idx) => `
       <div class="package-card bg-white/5 rounded-2xl overflow-hidden border border-white/10 text-center p-4 flex flex-col justify-between relative shadow-lg">
@@ -741,7 +797,7 @@ function renderPackages() {
         </div>
         
         <div class="my-3">
-          <p class="text-xl font-bold text-secondary">GH₵${pkg.price}</p>
+          <p class="text-xl font-bold text-secondary">GH₵${parseFloat(pkg.price).toFixed(2)}</p>
         </div>
 
         <button onclick="startPurchase('${activeNetwork}', ${idx})" 
@@ -794,7 +850,7 @@ function startPurchase(net, idx) {
   document.getElementById('pay-pkg').textContent = `${pkg.size} (${pkg.valid})`;
   document.getElementById('pay-net').textContent = net.toUpperCase();
   document.getElementById('pay-phone').textContent = number;
-  document.getElementById('pay-amount').textContent = pkg.price;
+  document.getElementById('pay-amount').textContent = parseFloat(pkg.price).toFixed(2);
   document.getElementById('momo-number').value = number;
   
   document.getElementById('payment-modal').classList.remove('hidden');
@@ -816,7 +872,7 @@ function initiatePayment() {
 
   document.getElementById('pay-step-1').classList.add('hidden');
   document.getElementById('pay-step-2').classList.remove('hidden');
-  document.getElementById('confirm-amount').textContent = currentPurchase.package.price;
+  document.getElementById('confirm-amount').textContent = parseFloat(currentPurchase.package.price).toFixed(2);
   document.getElementById('confirm-ref').textContent = currentPurchase.orderId;
 }
 
@@ -826,14 +882,23 @@ function verifyPayment() {
   btn.textContent = '⏳ Confirming Payment...';
 
   setTimeout(() => {
+    const priceVal = parseFloat(currentPurchase.package.price) || 0;
+    const costVal = parseFloat(currentPurchase.package.cost) || (priceVal * 0.7);
+    const profitVal = priceVal - costVal;
+
     const order = {
       id: currentPurchase.orderId,
       network: currentPurchase.network,
       number: currentPurchase.phone,
-      package: `${currentPurchase.package.size} — GH₵${currentPurchase.package.price}`,
+      package: `${currentPurchase.package.size} (${currentPurchase.package.valid})`,
+      size: currentPurchase.package.size,
+      price: priceVal,
+      cost: costVal,
+      profit: profitVal,
       ordered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
       delivered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      status: 'delivered'
+      status: 'delivered',
+      date: new Date().toLocaleDateString()
     };
     orders.unshift(order);
     localStorage.setItem('gdhub_orders', JSON.stringify(orders));
@@ -846,13 +911,19 @@ function verifyPayment() {
     closePaymentModal();
     btn.disabled = false;
     btn.textContent = '✅ I Have Paid / Confirm';
+
+    // Live update Admin if open
+    if (!document.getElementById('admin-modal').classList.contains('hidden')) {
+      updateAdminDashboard();
+      renderSales();
+    }
   }, 1200);
 }
 
 function showPurchaseAlert(order) {
   const alertBox = document.getElementById('purchase-alert');
   document.getElementById('buyer-name').textContent = order.number.replace(/(\d{3})\d+(\d{2})/, '$1****$2');
-  document.getElementById('buyer-pkg').textContent = order.package;
+  document.getElementById('buyer-pkg').textContent = `${order.size || ''} ${order.network.toUpperCase()}`;
   document.getElementById('deliver-time').textContent = order.delivered;
   alertBox.classList.remove('hidden');
   setTimeout(() => alertBox.classList.add('hidden'), 5000);
@@ -875,10 +946,10 @@ function checkOrderStatus() {
     <div class="space-y-2">
       ${matches.slice(0, 3).map(o => `
         <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 text-left">
-          <p class="text-sm font-bold">${o.package}</p>
+          <p class="text-sm font-bold">${o.package} — GH₵${(parseFloat(o.price)||0).toFixed(2)}</p>
           <div class="flex justify-between items-center text-xs text-gray-400 mt-1">
             <span>Status: <strong class="text-secondary uppercase">${o.status}</strong></span>
-            <span>${o.delivered}</span>
+            <span>${o.delivered || o.ordered}</span>
           </div>
         </div>
       `).join('')}
@@ -980,7 +1051,6 @@ function sendChat() {
 
   const container = document.getElementById('chat-messages');
 
-  // Add User Message Bubble
   const userDiv = document.createElement('div');
   userDiv.className = 'text-right my-1.5';
   userDiv.innerHTML = `<span class="inline-block bg-primary text-white text-xs sm:text-sm px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[85%] text-left shadow-md">${escapeHtml(msg)}</span>`;
@@ -989,7 +1059,6 @@ function sendChat() {
   input.value = '';
   container.scrollTop = container.scrollHeight;
 
-  // Simulate AI Thinking and Reply
   setTimeout(() => {
     const botReply = getBotAnswer(msg);
     const botDiv = document.createElement('div');
@@ -1007,17 +1076,233 @@ function escapeHtml(text) {
 }
 
 // ========== ADMIN PORTAL FUNCTIONS ==========
-function openAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
-function closeAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
+function openAdmin() { 
+  document.getElementById('admin-modal').classList.remove('hidden'); 
+  if (!document.getElementById('admin-panel').classList.contains('hidden')) {
+    updateAdminDashboard();
+    renderPriceEditor();
+    renderSales();
+  }
+}
+
+function closeAdmin() { 
+  document.getElementById('admin-modal').classList.add('hidden'); 
+}
+
 function verifyAdmin() {
   if (document.getElementById('admin-pass').value === CONFIG.adminPassword) {
     document.getElementById('admin-login').classList.add('hidden');
     document.getElementById('admin-panel').classList.remove('hidden');
-  } else showToast('❌ Incorrect admin password', 'error');
+    document.getElementById('admin-mobile-nav').classList.remove('hidden');
+    document.getElementById('admin-mobile-nav').classList.add('flex');
+    updateAdminDashboard();
+    renderPriceEditor();
+    renderSales();
+    showToast('🔓 Welcome back, Admin!', 'success');
+  } else {
+    showToast('❌ Incorrect admin password', 'error');
+  }
 }
+
 function switchAdminTab(tab) {
   document.querySelectorAll('.adm-tab').forEach(t => t.classList.add('hidden'));
-  document.getElementById('adm-tab-' + tab).classList.remove('hidden');
+  const target = document.getElementById('adm-tab-' + tab);
+  if (target) target.classList.remove('hidden');
+
+  // Desktop Nav Highlight
+  document.querySelectorAll('.adm-nav-item').forEach((el, idx) => {
+    const tabNames = ['dashboard', 'packages', 'sales'];
+    if (tabNames[idx] === tab) {
+      el.className = 'adm-nav-item p-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold cursor-pointer transition-colors';
+    } else {
+      el.className = 'adm-nav-item p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600 transition-colors';
+    }
+  });
+
+  // Mobile Nav Highlight
+  document.querySelectorAll('.adm-mob-btn').forEach((btn, idx) => {
+    const tabNames = ['dashboard', 'packages', 'sales'];
+    if (tabNames[idx] === tab) {
+      btn.className = 'adm-mob-btn px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 font-bold whitespace-nowrap';
+    } else {
+      btn.className = 'adm-mob-btn px-3 py-1.5 rounded-lg hover:bg-slate-100 text-slate-600 whitespace-nowrap';
+    }
+  });
+
+  const tabTitles = {
+    dashboard: '⚙️ Admin Control Center',
+    packages: '📦 Package & Pricing Management',
+    sales: '📑 Sales & Order Records'
+  };
+  const titleEl = document.getElementById('admin-page-title');
+  if (titleEl) titleEl.textContent = tabTitles[tab] || '⚙️ Admin Control Center';
+
+  if (tab === 'dashboard') updateAdminDashboard();
+  if (tab === 'packages') renderPriceEditor();
+  if (tab === 'sales') renderSales();
+}
+
+function updateAdminDashboard() {
+  const allOrders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
+  
+  let totalSales = 0;
+  let totalProfit = 0;
+  
+  allOrders.forEach(o => {
+    totalSales += (parseFloat(o.price) || 0);
+    totalProfit += (parseFloat(o.profit) || 0);
+  });
+  
+  document.getElementById('adm-stat-sales').textContent = `GH₵${totalSales.toFixed(2)}`;
+  document.getElementById('adm-stat-profit').textContent = totalProfit.toFixed(2);
+  document.getElementById('adm-stat-packages').textContent = allOrders.length;
+  document.getElementById('adm-stat-visitors').textContent = localStorage.getItem('gdhub_visitors') || '1';
+
+  const recentContainer = document.getElementById('adm-recent-orders');
+  if (allOrders.length === 0) {
+    recentContainer.innerHTML = `<div class="p-6 text-center text-slate-400">No orders recorded yet.</div>`;
+  } else {
+    recentContainer.innerHTML = `
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs sm:text-sm">
+          <thead>
+            <tr class="border-b border-slate-200 text-slate-400 font-semibold">
+              <th class="py-2.5 px-3">Order ID</th>
+              <th class="py-2.5 px-3">Network</th>
+              <th class="py-2.5 px-3">Recipient</th>
+              <th class="py-2.5 px-3">Package</th>
+              <th class="py-2.5 px-3">Amount</th>
+              <th class="py-2.5 px-3">Status</th>
+              <th class="py-2.5 px-3">Time</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100">
+            ${allOrders.slice(0, 5).map(o => `
+              <tr>
+                <td class="py-3 px-3 font-mono text-slate-500">${o.id}</td>
+                <td class="py-3 px-3 font-bold uppercase text-slate-700">${o.network}</td>
+                <td class="py-3 px-3 font-medium text-slate-800">${o.number}</td>
+                <td class="py-3 px-3 font-semibold text-emerald-700">${o.package || o.size}</td>
+                <td class="py-3 px-3 font-bold text-slate-800">GH₵${(parseFloat(o.price) || 0).toFixed(2)}</td>
+                <td class="py-3 px-3"><span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">Delivered</span></td>
+                <td class="py-3 px-3 text-slate-400">${o.delivered || o.ordered}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </div>
+    `;
+  }
+}
+
+function renderPriceEditor() {
+  const container = document.getElementById('price-editor');
+  const networks = ['mtn', 'airteltigo', 'telecel'];
+  const netNames = { mtn: 'MTN Ghana', airteltigo: 'AirtelTigo', telecel: 'Telecel Ghana' };
+  const netColors = { mtn: 'border-yellow-400', airteltigo: 'border-red-400', telecel: 'border-emerald-500' };
+
+  container.innerHTML = networks.map(net => `
+    <div class="bg-slate-50 p-4 rounded-xl border ${netColors[net]} shadow-sm">
+      <h5 class="font-bold text-slate-800 border-b border-slate-200 pb-2 mb-3 flex items-center justify-between">
+        <span>${netNames[net]}</span>
+        <span class="text-xs text-slate-500 font-normal">${packages[net].length} Bundles</span>
+      </h5>
+      <div class="space-y-3 max-h-96 overflow-y-auto pr-1">
+        ${packages[net].map((pkg, idx) => `
+          <div class="p-3 bg-white rounded-lg border border-slate-200 shadow-2xs text-xs">
+            <div class="flex justify-between items-center mb-1.5 font-bold text-slate-700">
+              <span>${pkg.size} (${pkg.valid})</span>${pkg.badge ? `<span class="text-[10px] bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded uppercase">${pkg.badge}</span>` : ''}
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+              <div>
+                <label class="block text-[10px] text-slate-400 uppercase font-bold">Sell Price (GH₵)</label>
+                <input type="number" step="0.50" value="${pkg.price}" data-net="${net}" data-idx="${idx}" data-field="price"
+                  class="w-full px-2 py-1.5 border border-slate-200 rounded font-semibold text-slate-800 focus:border-emerald-500 outline-none">
+              </div>
+              <div>
+                <label class="block text-[10px] text-slate-400 uppercase font-bold">Cost Price (GH₵)</label>
+                <input type="number" step="0.50" value="${pkg.cost}" data-net="${net}" data-idx="${idx}" data-field="cost"
+                  class="w-full px-2 py-1.5 border border-slate-200 rounded font-semibold text-slate-600 focus:border-emerald-500 outline-none">
+              </div>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function saveAllPrices() {
+  const inputs = document.querySelectorAll('#price-editor input');
+  inputs.forEach(input => {
+    const net = input.dataset.net;
+    const idx = parseInt(input.dataset.idx, 10);
+    const field = input.dataset.field;
+    if (net && !isNaN(idx) && field && packages[net] && packages[net][idx]) {
+      packages[net][idx][field] = parseFloat(input.value).toFixed(2);
+    }
+  });
+
+  localStorage.setItem('gdhub_prices', JSON.stringify(packages));
+  renderPackages();
+  showToast('✅ All package prices updated successfully!', 'success');
+}
+
+function renderSales() {
+  const allOrders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
+  const container = document.getElementById('adm-all-sales');
+  
+  if (allOrders.length === 0) {
+    container.innerHTML = `<div class="p-6 text-center text-slate-400">No order logs recorded yet.</div>`;
+    return;
+  }
+
+  container.innerHTML = `
+    <div class="flex justify-between items-center mb-4">
+      <span class="text-xs text-slate-500 font-semibold">Total Recorded Orders: ${allOrders.length}</span>
+      <button onclick="clearSalesLog()" class="text-xs text-red-600 hover:text-red-800 font-semibold border border-red-200 bg-red-50 px-3 py-1.5 rounded-lg transition-colors">Clear Order History</button>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse text-xs sm:text-sm">
+        <thead>
+          <tr class="border-b border-slate-200 text-slate-400 font-semibold">
+            <th class="py-2.5 px-3">Order ID</th>
+            <th class="py-2.5 px-3">Date/Time</th>
+            <th class="py-2.5 px-3">Network</th>
+            <th class="py-2.5 px-3">Phone</th>
+            <th class="py-2.5 px-3">Package</th>
+            <th class="py-2.5 px-3">Sell Price</th>
+            <th class="py-2.5 px-3">Est. Profit</th>
+            <th class="py-2.5 px-3">Status</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+          ${allOrders.map(o => `
+            <tr>
+              <td class="py-3 px-3 font-mono text-slate-500">${o.id}</td>
+              <td class="py-3 px-3 text-slate-400">${o.date \vert{}\vert{} ''}${o.delivered || o.ordered}</td>
+              <td class="py-3 px-3 font-bold uppercase text-slate-700">${o.network}</td>
+              <td class="py-3 px-3 font-medium text-slate-800">${o.number}</td>
+              <td class="py-3 px-3 font-semibold text-emerald-700">${o.package || o.size}</td>
+              <td class="py-3 px-3 font-bold text-slate-800">GH₵${(parseFloat(o.price) || 0).toFixed(2)}</td>
+              <td class="py-3 px-3 font-bold text-emerald-600">+GH₵${(parseFloat(o.profit) || 0).toFixed(2)}</td>
+              <td class="py-3 px-3"><span class="bg-emerald-100 text-emerald-800 text-[11px] font-bold px-2.5 py-0.5 rounded-full">Delivered</span></td>
+            </tr>
+          `).join('')}
+        </tbody>
+      </table>
+    </div>
+  `;
+}
+
+function clearSalesLog() {
+  if (confirm('Are you sure you want to clear all order logs?')) {
+    orders = [];
+    localStorage.removeItem('gdhub_orders');
+    updateAdminDashboard();
+    renderSales();
+    showToast('🗑️ Order logs cleared.', 'info');
+  }
 }
 
 // ========== AUTOLOAD PREFERENCES ==========
