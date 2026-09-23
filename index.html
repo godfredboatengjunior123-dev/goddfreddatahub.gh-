@@ -33,7 +33,6 @@ body {
   overflow-x: hidden;
 }
 
-/* ===== ANIMATIONS ===== */
 @keyframes float-bubble {
   0%, 100% { transform: translateY(0) scale(1); opacity: 0.6; }
   50% { transform: translateY(-20px) scale(1.05); opacity: 1; }
@@ -65,7 +64,6 @@ body {
   filter: blur(2px); z-index: 0; pointer-events: none;
 }
 
-/* ===== CARD STYLES ===== */
 .card {
   background: rgba(255,255,255,0.85);
   backdrop-filter: blur(12px);
@@ -77,7 +75,6 @@ body {
 .card:hover { transform: translateY(-4px); box-shadow: var(--shadow-float); }
 .card-soft { background: rgba(255,255,255,0.6); border-radius: 20px; }
 
-/* ===== BUTTONS ===== */
 .btn-primary {
   background: var(--gradient-btn); color: white; border-radius: 16px; font-weight: 600;
   padding: 14px 28px; transition: all 0.3s; border: none; cursor: pointer;
@@ -90,7 +87,6 @@ body {
 .btn-secondary:hover { background: var(--primary-soft); border-color: var(--primary); }
 .btn-success { background: linear-gradient(135deg, #10B981, #34D399); color: white; border-radius: 16px; font-weight: 600; padding: 14px 28px; border: none; }
 
-/* ===== INPUTS ===== */
 .input-soft {
   background: rgba(255,255,255,0.8); border: 2px solid rgba(226,232,240,0.8);
   border-radius: 14px; padding: 14px 18px; width: 100%; outline: none; transition: all 0.3s;
@@ -98,14 +94,12 @@ body {
 }
 .input-soft:focus { border-color: var(--primary); box-shadow: 0 0 0 4px rgba(79,70,229,0.1); background: white; }
 
-/* ===== TABS ===== */
 .tab-btn {
   padding: 12px 24px; border-radius: 14px; font-weight: 600; transition: all 0.3s; border: none;
   background: transparent; color: var(--text-muted); cursor: pointer;
 }
 .tab-btn.active { background: white; color: var(--primary); box-shadow: var(--shadow-soft); }
 
-/* ===== MODAL ===== */
 .modal-backdrop {
   position: fixed; inset: 0; background: rgba(15,23,42,0.4); backdrop-filter: blur(8px);
   z-index: 100; display: flex; align-items: center; justify-content: center; padding: 1rem;
@@ -117,7 +111,6 @@ body {
   border: 1px solid rgba(255,255,255,0.9);
 }
 
-/* ===== ADMIN SIDEBAR & TABLES ===== */
 .admin-sidebar-link {
   display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 12px;
   margin-bottom: 4px; cursor: pointer; transition: all 0.2s;
@@ -134,7 +127,6 @@ body {
 .admin-table th, .admin-table td { padding: 12px 14px; text-align: left; border-bottom: 1px solid rgba(226,232,240,0.6); }
 .admin-table tr:hover { background: rgba(248,250,255,0.8); }
 
-/* ===== UTILITIES ===== */
 .hidden { display: none !important; }
 .section { position: relative; z-index: 1; }
 .stagger-1 { animation-delay: 0.1s; }
@@ -151,6 +143,125 @@ body {
 }
 .badge-success { background: #D1FAE5; color: #059669; }
 .badge-warning { background: #FEF3C7; color: #D97706; }
+
+/* FAQ Styles */
+.faq-item {
+  background: rgba(255,255,255,0.8);
+  border-radius: 16px;
+  overflow: hidden;
+  transition: all 0.3s;
+}
+.faq-question {
+  padding: 18px 24px;
+  cursor: pointer;
+  font-weight: 600;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.faq-answer {
+  padding: 0 24px 18px;
+  color: #475569;
+  line-height: 1.6;
+  display: none;
+}
+.faq-item.open .faq-answer { display: block; }
+.faq-icon { transition: transform 0.3s; }
+.faq-item.open .faq-icon { transform: rotate(180deg); }
+
+/* Chatbot Styles */
+.chatbot-toggle {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  background: var(--gradient-btn);
+  color: white;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 20px rgba(79,70,229,0.3);
+  z-index: 99;
+  transition: all 0.3s;
+}
+.chatbot-toggle:hover { transform: scale(1.1); }
+.chatbot-window {
+  position: fixed;
+  bottom: 90px;
+  right: 24px;
+  width: 380px;
+  max-width: calc(100vw - 48px);
+  height: 500px;
+  max-height: calc(100vh - 120px);
+  border-radius: 24px;
+  background: white;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.chatbot-header {
+  background: var(--gradient-btn);
+  color: white;
+  padding: 16px 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.chatbot-messages {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+  background: #F8FAFF;
+}
+.chat-message {
+  margin-bottom: 16px;
+  max-width: 85%;
+}
+.chat-message.bot { margin-right: auto; }
+.chat-message.user { margin-left: auto; }
+.chat-bubble {
+  padding: 12px 16px;
+  border-radius: 18px;
+  line-height: 1.4;
+}
+.chat-message.bot .chat-bubble {
+  background: white;
+  border: 1px solid #E2E8F0;
+  border-bottom-left-radius: 4px;
+}
+.chat-message.user .chat-bubble {
+  background: var(--primary);
+  color: white;
+  border-bottom-right-radius: 4px;
+}
+.chatbot-input-area {
+  padding: 16px;
+  border-top: 1px solid #E2E8F0;
+  display: flex;
+  gap: 10px;
+}
+.chatbot-input {
+  flex: 1;
+  padding: 12px 16px;
+  border-radius: 24px;
+  border: 2px solid #E2E8F0;
+  outline: none;
+  font-size: 0.95rem;
+}
+.chatbot-input:focus { border-color: var(--primary); }
+.chatbot-send {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: var(--primary);
+  color: white;
+  border: none;
+  cursor: pointer;
+}
 </style>
 <script>
 tailwind.config = {
@@ -165,14 +276,12 @@ tailwind.config = {
 </head>
 <body>
 
-<!-- Floating Background Bubbles -->
 <div class="bubble w-20 h-20 top-10 left-10 animate-float" style="animation-delay: 0s;"></div>
 <div class="bubble w-16 h-16 top-32 right-16 animate-float" style="animation-delay: 1.2s;"></div>
 <div class="bubble w-24 h-24 bottom-20 left-20 animate-float" style="animation-delay: 2.4s;"></div>
 <div class="bubble w-12 h-12 bottom-32 right-24 animate-float" style="animation-delay: 3.6s;"></div>
 <div class="bubble w-8 h-8 top-1/3 left-1/4 animate-float" style="animation-delay: 4.8s;"></div>
 
-<!-- Navigation -->
 <nav class="sticky top-0 z-50 px-4 py-4">
   <div class="max-w-6xl mx-auto card px-6 py-3 flex justify-between items-center">
     <a href="#" class="flex items-center gap-3">
@@ -203,8 +312,7 @@ tailwind.config = {
   </div>
 </nav>
 
-<!-- Hero Section -->
-<header class="section min-h-[85vh] flex flex-col items-center justify-center text-center px-4 py-12">
+<header class="section min-h-[70vh] flex flex-col items-center justify-center text-center px-4 py-8">
   <div class="max-w-3xl mx-auto">
     <h1 class="text-4xl md:text-6xl font-bold mb-6 animate-fade-up stagger-1">
       Buy Data <span class="text-gradient">Instantly</span>
@@ -231,7 +339,6 @@ tailwind.config = {
   </div>
 </header>
 
-<!-- Floating Purchase Alert -->
 <div id="purchase-alert" class="fixed bottom-6 right-6 hidden card p-4 max-w-xs z-50 animate-fade-up">
   <div class="flex items-start gap-3">
     <div class="text-success text-xl"><i class="fa fa-check-circle"></i></div>
@@ -242,27 +349,24 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- Packages Section -->
 <section id="packages" class="section px-4 py-16 max-w-6xl mx-auto">
   <div class="text-center mb-10">
     <h2 class="text-3xl font-bold mb-3 animate-fade-up">📦 Select Your Network</h2>
     <p class="text-gray-500 animate-fade-up stagger-1">Choose a network to view available data bundles</p>
   </div>
 
-  <!-- Network Tabs -->
   <div class="flex flex-wrap justify-center gap-3 mb-8 animate-fade-up stagger-2">
-    <button class="tab-btn" data-network="mtn">
+    <button class="tab-btn" data-network="mtn" onclick="selectNetwork('mtn')">
       <i class="fa fa-signal mr-2"></i> MTN
     </button>
-    <button class="tab-btn" data-network="airteltigo">
+    <button class="tab-btn" data-network="airteltigo" onclick="selectNetwork('airteltigo')">
       <i class="fa fa-signal mr-2"></i> AirtelTigo
     </button>
-    <button class="tab-btn" data-network="telecel">
+    <button class="tab-btn" data-network="telecel" onclick="selectNetwork('telecel')">
       <i class="fa fa-signal mr-2"></i> Telecel
     </button>
   </div>
 
-  <!-- Phone Input -->
   <div class="max-w-md mx-auto mb-8 card p-5 animate-fade-up stagger-3">
     <label class="block text-sm font-semibold text-gray-600 mb-2">Your Phone Number</label>
     <div class="flex gap-3">
@@ -272,13 +376,11 @@ tailwind.config = {
     </div>
   </div>
 
-  <!-- Packages Grid -->
   <div id="packages-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
     <p class="col-span-full text-center text-gray-400 py-10 animate-fade-up stagger-4">👆 Click a network above to see packages</p>
   </div>
 </section>
 
-<!-- Track Section -->
 <section id="track" class="section px-4 py-16 max-w-md mx-auto">
   <div class="text-center mb-8">
     <h2 class="text-3xl font-bold mb-3 animate-fade-up">🔍 Track Your Order</h2>
@@ -293,15 +395,15 @@ tailwind.config = {
   </div>
 </section>
 
-<!-- FAQ Section -->
 <section id="faq" class="section px-4 py-16 max-w-2xl mx-auto">
   <div class="text-center mb-10">
     <h2 class="text-3xl font-bold mb-3 animate-fade-up">❓ Frequently Asked Questions</h2>
   </div>
-  <div id="faq-container" class="space-y-4"></div>
+  <div id="faq-container" class="space-y-4">
+    <!-- FAQ will be rendered here -->
+  </div>
 </section>
 
-<!-- Feedback Section -->
 <section id="feedback" class="section px-4 py-16 max-w-md mx-auto">
   <div class="text-center mb-8">
     <h2 class="text-3xl font-bold mb-3 animate-fade-up">⭐ Rate Your Experience</h2>
@@ -309,11 +411,11 @@ tailwind.config = {
   </div>
   <div class="card p-6 animate-fade-up stagger-2">
     <div class="flex justify-center gap-2 text-4xl mb-6" id="rating-stars">
-      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="1">★</span>
-      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="2">★</span>
-      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="3">★</span>
-      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="4">★</span>
-      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="5">★</span>
+      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="1" onclick="setRating(1)">★</span>
+      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="2" onclick="setRating(2)">★</span>
+      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="3" onclick="setRating(3)">★</span>
+      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="4" onclick="setRating(4)">★</span>
+      <span class="cursor-pointer text-gray-300 hover:text-yellow-400 transition-colors" data-val="5" onclick="setRating(5)">★</span>
     </div>
     <textarea id="feedback-text" rows="3" placeholder="Your feedback helps us improve..."
       class="input-soft mb-4"></textarea>
@@ -324,7 +426,6 @@ tailwind.config = {
   </div>
 </section>
 
-<!-- Footer -->
 <footer class="py-10 px-4 text-center text-sm text-gray-500">
   <p class="mb-2 font-medium">© 2026 Godfred Data Hub</p>
   <p>Fast · Affordable · Reliable</p>
@@ -337,7 +438,6 @@ tailwind.config = {
       <h3 class="text-xl font-bold">💳 Complete Payment</h3>
       <button onclick="closePaymentModal()" class="text-gray-400 hover:text-gray-600 text-xl"><i class="fa fa-times"></i></button>
     </div>
-
     <div id="pay-step-1">
       <div class="card-soft p-4 mb-5">
         <p class="mb-2"><strong>Package:</strong> <span id="pay-pkg"></span></p>
@@ -345,7 +445,6 @@ tailwind.config = {
         <p class="mb-3"><strong>Deliver to:</strong> <span id="pay-phone"></span></p>
         <p class="text-2xl font-bold text-gradient">GH₵ <span id="pay-amount"></span></p>
       </div>
-
       <p class="font-semibold mb-3">Pay via:</p>
       <div class="space-y-3 mb-5">
         <label class="flex items-center gap-3 card-soft p-3 cursor-pointer hover:bg-yellow-50 transition-colors">
@@ -361,15 +460,12 @@ tailwind.config = {
           <span class="font-bold text-green-600">Telecel Cash</span>
         </label>
       </div>
-
       <label class="block text-sm font-semibold text-gray-600 mb-2">Your MoMo Number</label>
       <input type="tel" id="momo-number" placeholder="e.g. 054XXXXXXX" class="input-soft mb-4">
-
       <button onclick="initiatePayment()" class="btn-primary w-full animate-pulse-soft">
         ⚡ Pay & Get Data
       </button>
     </div>
-
     <div id="pay-step-2" class="hidden text-center py-4">
       <div class="text-5xl mb-4">📲</div>
       <h4 class="text-lg font-bold mb-2">Payment Request Sent!</h4>
@@ -386,10 +482,9 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- Admin Dashboard -->
+<!-- Admin Modal -->
 <div id="admin-modal" class="hidden modal-backdrop p-0 items-stretch justify-start bg-black/30">
   <div class="flex w-full max-w-[1400px] min-h-screen bg-white/90 backdrop-blur-xl rounded-none overflow-hidden">
-    <!-- Sidebar -->
     <aside class="w-64 bg-white/70 border-r border-gray-100 p-4 flex-shrink-0">
       <div class="flex items-center gap-2 mb-8 mt-2">
         <div class="w-9 h-9 rounded-2xl gradient-btn flex items-center justify-center text-white font-bold">G</div>
@@ -420,10 +515,7 @@ tailwind.config = {
         </a>
       </nav>
     </aside>
-
-    <!-- Main Content -->
     <main class="flex-1 overflow-y-auto p-6 bg-gradient-to-br from-indigo-50/50 to-cyan-50/50">
-      <!-- Login -->
       <div id="admin-login" class="flex items-center justify-center h-full">
         <div class="card p-8 w-full max-w-md">
           <h2 class="text-2xl font-bold mb-2">Welcome Back</h2>
@@ -432,8 +524,6 @@ tailwind.config = {
           <button onclick="verifyAdmin()" class="btn-primary w-full">Sign In</button>
         </div>
       </div>
-
-      <!-- Admin Panel -->
       <div id="admin-panel" class="hidden">
         <div class="flex justify-between items-center mb-8">
           <div>
@@ -444,8 +534,6 @@ tailwind.config = {
             <i class="fa fa-save mr-1"></i> Save Changes
           </button>
         </div>
-
-        <!-- Dashboard Tab -->
         <div id="tab-dashboard" class="admin-tab-content">
           <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 mb-8">
             <div class="stat-card">
@@ -493,8 +581,6 @@ tailwind.config = {
             </div>
           </div>
         </div>
-
-        <!-- Packages Tab -->
         <div id="tab-packages" class="admin-tab-content hidden">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="stat-card">
@@ -511,8 +597,6 @@ tailwind.config = {
             </div>
           </div>
         </div>
-
-        <!-- Sales Tab -->
         <div id="tab-sales" class="admin-tab-content hidden">
           <div class="stat-card">
             <h3 class="font-semibold mb-4">All Sales & Orders</h3>
@@ -534,8 +618,6 @@ tailwind.config = {
             </table>
           </div>
         </div>
-
-        <!-- Profits Tab -->
         <div id="tab-profits" class="admin-tab-content hidden">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
             <div class="stat-card">
@@ -558,8 +640,6 @@ tailwind.config = {
             </div>
           </div>
         </div>
-
-        <!-- Engagement Tab -->
         <div id="tab-engagement" class="admin-tab-content hidden">
           <div class="grid grid-cols-1 sm:grid-cols-3 gap-5 mb-6">
             <div class="stat-card">
@@ -595,6 +675,34 @@ tailwind.config = {
         </div>
       </div>
     </main>
+  </div>
+</div>
+
+<!-- AI Chatbot -->
+<button id="chatbot-toggle" class="chatbot-toggle" onclick="toggleChatbot()">
+  <i class="fa fa-comments"></i>
+</button>
+<div id="chatbot-window" class="chatbot-window hidden">
+  <div class="chatbot-header">
+    <span class="font-bold">💬 Godfred Data Assistant</span>
+    <button onclick="toggleChatbot()" class="text-white/80 hover:text-white">
+      <i class="fa fa-times"></i>
+    </button>
+  </div>
+  <div id="chatbot-messages" class="chatbot-messages">
+    <!-- Welcome message -->
+    <div class="chat-message bot">
+      <div class="chat-bubble">
+        Hi there! 👋 Welcome to Godfred Data Hub. I'm here to help you buy affordable data instantly.<br><br>
+        How can I assist you today?
+      </div>
+    </div>
+  </div>
+  <div class="chatbot-input-area">
+    <input type="text" id="chatbot-input" class="chatbot-input" placeholder="Type your message..." onkeypress="handleChatKeypress(event)">
+    <button class="chatbot-send" onclick="sendChatMessage()">
+      <i class="fa fa-paper-plane"></i>
+    </button>
   </div>
 </div>
 
@@ -661,111 +769,3 @@ const defaultPackages = {
     {size: "20GB", price: "60.00", valid: "60D", cost: "40.80"},
     {size: "30GB", price: "83.00", valid: "90D", cost: "56.50"},
     {size: "50GB", price: "125.00", valid: "90D", cost: "85.00"}
-  ]
-};
-
-// ========== STATE ==========
-let saved = localStorage.getItem('gdhub_prices');
-let packages = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPackages));
-let activeNetwork = null;
-let orders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
-let selectedRating = 0;
-let currentPurchase = null;
-let engagement = JSON.parse(localStorage.getItem('gdhub_engagement') || '{"visits":0,"pageViews":{"packages":0,"track":0,"faq":0}}');
-
-// Track visits
-engagement.visits++;
-const page = window.location.hash || '#packages';
-if (page.includes('packages')) engagement.pageViews.packages++;
-else if (page.includes('track')) engagement.pageViews.track++;
-else if (page.includes('faq')) engagement.pageViews.faq++;
-localStorage.setItem('gdhub_engagement', JSON.stringify(engagement));
-
-// ========== FAQ DATA ==========
-const faqs = [
-  {q: "How fast is delivery?", a: "Data is sent instantly after payment confirmation — usually within 10–30 seconds."},
-  {q: "Which networks do you support?", a: "MTN, AirtelTigo, and Telecel — all major networks in Ghana."},
-  {q: "How do I pay?", a: "Pay via MTN MoMo, AirtelTigo Money, or Telecel Cash — follow the prompts after selecting your package."},
-  {q: "Can I buy for someone else?", a: "Yes! Just enter their phone number instead of yours during purchase."},
-  {q: "What if data doesn't arrive?", a: "Use the Track Order page or contact us via WhatsApp/Telegram — we'll fix it immediately."}
-];
-
-// ========== INIT ==========
-document.addEventListener('DOMContentLoaded', () => {
-  renderFaqs();
-  setupTabs();
-  setupRating();
-});
-
-// ========== MOBILE MENU ==========
-function toggleMobileMenu() {
-  document.getElementById('mobile-menu').classList.toggle('hidden');
-}
-
-// ========== NETWORK TABS ==========
-function setupTabs() {
-  document.querySelectorAll('.tab-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      activeNetwork = btn.dataset.network;
-      renderPackages(activeNetwork);
-    });
-  });
-}
-
-function renderPackages(network) {
-  const container = document.getElementById('packages-container');
-  const list = packages[network] || [];
-  container.innerHTML = '';
-  
-  list.forEach((pkg, i) => {
-    const card = document.createElement('div');
-    card.className = 'card p-4 text-center cursor-pointer animate-fade-up';
-    card.style.animationDelay = `${0.1 + i * 0.05}s`;
-    card.innerHTML = `
-      <p class="text-sm text-gray-500">${pkg.valid}</p>
-      <p class="text-xl font-bold my-1">${pkg.size}</p>
-      <p class="text-lg font-bold text-gradient">GH₵ ${pkg.price}</p>
-    `;
-    card.onclick = () => selectPackage(pkg, network);
-    container.appendChild(card);
-  });
-}
-
-function detectNetwork(num) {
-  const prefix = num.replace(/\D/g, '').slice(0,3);
-  const mtn = ['054','055','059','024','025','026'];
-  const atg = ['027','056','057'];
-  const tele = ['020','050','053'];
-  let label = '—';
-  if (mtn.includes(prefix)) label = 'MTN';
-  else if (atg.includes(prefix)) label = 'AirtelTigo';
-  else if (tele.includes(prefix)) label = 'Telecel';
-  document.getElementById('detected-network').textContent = label;
-}
-
-function selectPackage(pkg, network) {
-  const phone = document.getElementById('buyer-number').value.trim();
-  if (!phone || phone.length < 9) {
-    alert('Please enter your phone number first');
-    document.getElementById('buyer-number').focus();
-    return;
-  }
-  currentPurchase = { pkg, network, phone };
-  document.getElementById('pay-pkg').textContent = pkg.size + ' (' + pkg.valid + ')';
-  document.getElementById('pay-net').textContent = network.toUpperCase();
-  document.getElementById('pay-phone').textContent = phone;
-  document.getElementById('pay-amount').textContent = pkg.price;
-  document.getElementById('payment-modal').classList.remove('hidden');
-}
-
-function closePaymentModal() {
-  document.getElementById('payment-modal').classList.add('hidden');
-  document.getElementById('pay-step-1').classList.remove('hidden');
-  document.getElementById('pay-step-2').classList.add('hidden');
-  currentPurchase = null;
-}
-
-function initiatePayment() {
-  const method = document.querySelector('input[name="momo-method"]:checked
