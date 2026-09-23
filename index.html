@@ -222,7 +222,7 @@ tailwind.config = {
       🟢 All Networks Operational (MTN • Telecel • AirtelTigo)
     </span>
     <span class="text-gray-300 hidden md:flex items-center gap-2 mx-auto sm:mx-0">
-      <span id="promo-banner" class="transition-opacity duration-500">💡 Tip: Buy in bulk & enjoy extra validity!</span>
+      <span id="promo-banner" class="transition-opacity duration-500">💡 Tip: Fast automated delivery 24/7!</span>
     </span>
   </div>
 </div>
@@ -558,7 +558,7 @@ tailwind.config = {
           <div class="bg-white p-6 rounded-2xl border border-slate-200">
             <h4 class="font-bold mb-4">Edit Package Prices</h4>
             <div id="price-editor" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-            <button onclick="saveAllPrices()" class="mt-6 bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl">Save All Changes</button>
+            <button onclick="saveAllPrices()" class="mt-6 bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:bg-emerald-700 transition-all">Save All Changes</button>
           </div>
         </div>
         <div id="adm-tab-sales" class="adm-tab hidden">
@@ -579,7 +579,7 @@ const CONFIG = {
   momoApiUrl: "https://api.techlink.com.gh/v1/payment/charge"
 };
 
-// ========== DEFAULT PACKAGES WITH BADGES ==========
+// ========== DEFAULT PACKAGES (CLEANED - NO VALIDITY PROPERTIES) ==========
 const defaultPackages = {
   mtn: [
     {size: "100MB", price: "1.00", cost: "0.70"},
@@ -677,7 +677,7 @@ function triggerConfetti() {
 
 // ========== ROTATING PROMO BANNER & TICKER ==========
 const promoTips = [
-  "💡 Tip: Buy in bulk & enjoy extra validity!",
+  "💡 Tip: Fast automated delivery 24/7!",
   "⚡ Orders are processed automatically within 5 minutes!",
   "🎁 Special discount on 10GB & 20GB bundles today!",
   "📱 Works on all unlocked SIMs & router devices!"
@@ -737,7 +737,6 @@ function renderPackages() {
         
         <div class="pt-2">
           <h3 class="text-2xl font-black tracking-tight">${pkg.size}</h3>
-          <p class="text-xs text-gray-400 font-medium mt-0.5">Valid ${pkg.valid}</p>
         </div>
         
         <div class="my-3">
@@ -791,7 +790,7 @@ function startPurchase(net, idx) {
   const pkg = packages[net][idx];
   currentPurchase = { network: net, package: pkg, phone: number, orderId: 'GD-' + Date.now() };
 
-  document.getElementById('pay-pkg').textContent = `${pkg.size} (${pkg.valid})`;
+  document.getElementById('pay-pkg').textContent = pkg.size;
   document.getElementById('pay-net').textContent = net.toUpperCase();
   document.getElementById('pay-phone').textContent = number;
   document.getElementById('pay-amount').textContent = pkg.price;
@@ -959,11 +958,6 @@ function getBotAnswer(query) {
     return "📶 We support top-ups for **MTN**, **Telecel** (formerly Vodafone), and **AirtelTigo** across all regions in Ghana!";
   }
 
-  // Expiry / Validity
-  if (q.includes('valid') || q.includes('expire') || q.includes('duration') || q.includes('how many days')) {
-    return "📅 Validity depends on bundle size:\n• Small (100MB-500MB): 1 Day\n• Medium (1GB-5GB): 3 to 14 Days\n• Large (10GB-50GB): 30 to 90 Days!";
-  }
-
   // Greetings
   if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('good morning') || q.includes('good afternoon') || q.includes('good evening')) {
     return "👋 Hello! Welcome to Godfred Data Hub. How can I help you today? Ask me about delivery speed, package prices, tracking orders, or payment methods!";
@@ -980,7 +974,6 @@ function sendChat() {
 
   const container = document.getElementById('chat-messages');
 
-  // Add User Message Bubble
   const userDiv = document.createElement('div');
   userDiv.className = 'text-right my-1.5';
   userDiv.innerHTML = `<span class="inline-block bg-primary text-white text-xs sm:text-sm px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[85%] text-left shadow-md">${escapeHtml(msg)}</span>`;
@@ -989,7 +982,6 @@ function sendChat() {
   input.value = '';
   container.scrollTop = container.scrollHeight;
 
-  // Simulate AI Thinking and Reply
   setTimeout(() => {
     const botReply = getBotAnswer(msg);
     const botDiv = document.createElement('div');
@@ -1009,12 +1001,79 @@ function escapeHtml(text) {
 // ========== ADMIN PORTAL FUNCTIONS ==========
 function openAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
 function closeAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
+
+function renderAdminPriceEditor() {
+  const container = document.getElementById('price-editor');
+  if (!container) return;
+
+  let html = '';
+  for (const net in packages) {
+    html += `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+      <h5 class="font-bold text-slate-800 uppercase mb-3">${net}</h5>`;
+    packages[net].forEach((pkg, idx) => {
+      html += `
+        <div class="flex items-center gap-2 mb-2">
+          <span class="text-xs font-bold w-16">${pkg.size}</span>
+          <input type="number" step="0.5" id="price-${net}-${idx}" value="${pkg.price}" 
+            class="w-full px-2 py-1 text-sm border rounded outline-none focus:border-emerald-500">
+        </div>`;
+    });
+    html += `</div>`;
+  }
+  container.innerHTML = html;
+}
+
+function saveAllPrices() {
+  for (const net in packages) {
+    packages[net].forEach((pkg, idx) => {
+      const input = document.getElementById(`price-${net}-${idx}`);
+      if (input) pkg.price = parseFloat(input.value).toFixed(2);
+    });
+  }
+  localStorage.setItem('gdhub_prices', JSON.stringify(packages));
+  renderPackages();
+  showToast('✅ Package prices updated successfully!', 'success');
+}
+
+function updateAdminStats() {
+  const salesCount = orders.length;
+  let totalRevenue = 0;
+
+  orders.forEach(o => {
+    const parts = o.package.split('— GH₵');
+    if (parts[1]) totalRevenue += parseFloat(parts[1]);
+  });
+
+  document.getElementById('adm-stat-sales').textContent = salesCount;
+  document.getElementById('adm-stat-packages').textContent = salesCount;
+  document.getElementById('adm-stat-profit').textContent = (totalRevenue * 0.15).toFixed(2);
+
+  const logContainer = document.getElementById('adm-recent-orders');
+  const allSalesContainer = document.getElementById('adm-all-sales');
+  
+  if (orders.length > 0) {
+    const orderLogsHtml = orders.map(o => `
+      <div class="py-2 border-b border-slate-100 flex justify-between items-center">
+        <div><strong>${o.number}</strong> (${o.network.toUpperCase()}) - ${o.package}</div>
+        <span class="text-xs text-slate-400">${o.delivered}</span>
+      </div>
+    `).join('');
+    if (logContainer) logContainer.innerHTML = orderLogsHtml;
+    if (allSalesContainer) allSalesContainer.innerHTML = orderLogsHtml;
+  }
+}
+
 function verifyAdmin() {
   if (document.getElementById('admin-pass').value === CONFIG.adminPassword) {
     document.getElementById('admin-login').classList.add('hidden');
     document.getElementById('admin-panel').classList.remove('hidden');
-  } else showToast('❌ Incorrect admin password', 'error');
+    renderAdminPriceEditor();
+    updateAdminStats();
+  } else {
+    showToast('❌ Incorrect admin password', 'error');
+  }
 }
+
 function switchAdminTab(tab) {
   document.querySelectorAll('.adm-tab').forEach(t => t.classList.add('hidden'));
   document.getElementById('adm-tab-' + tab).classList.remove('hidden');
