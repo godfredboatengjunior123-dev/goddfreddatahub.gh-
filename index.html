@@ -1,1127 +1,460 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Godfred Data Hub | Fast Data via MoMo</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-<style>
-:root {
-  --primary: #165DFF;
-  --secondary: #36D399;
-  --accent: #F87272;
-  --dark: #0F172A;
-  --light: #F8FAFC;
-}
-body { 
-  font-family: 'Segoe UI', sans-serif; 
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%); 
-  color: white; 
-  min-height: 100vh; 
-  overflow-x: hidden;
-}
-
-/* ===== ANIMATIONS ===== */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(25px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1); }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(1deg); }
-}
-@keyframes pulse-glow {
-  0% { box-shadow: 0 0 5px rgba(54, 211, 153, 0.4); }
-  50% { box-shadow: 0 0 25px rgba(54, 211, 153, 0.7), 0 0 40px rgba(22, 93, 255, 0.4); }
-  100% { box-shadow: 0 0 5px rgba(54, 211, 153, 0.4); }
-}
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-@keyframes bounce-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.animate-fade-up { animation: fadeInUp 0.6s ease forwards; }
-.animate-fade-scale { animation: fadeInScale 0.4s ease forwards; }
-.animate-float { animation: float 4s ease-in-out infinite; }
-.animate-pulse-glow { animation: pulse-glow 2s infinite; }
-.animate-bounce-slow { animation: bounce-slow 2.5s ease-in-out infinite; }
-
-.shimmer-skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-.gradient-hero {
-  background: linear-gradient(90deg, #165DFF, #36D399, #165DFF);
-  background-size: 200% 100%;
-  animation: gradient-shift 4s ease infinite;
-}
-
-/* ===== CARD & BADGE STYLES ===== */
-.package-card {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
-  perspective: 1000px;
-}
-.package-card:hover {
-  transform: translateY(-8px) scale(1.03) rotateX(2deg);
-  box-shadow: 0 20px 35px rgba(22, 93, 255, 0.3), 0 0 15px rgba(54, 211, 153, 0.2);
-  border-color: rgba(54, 211, 153, 0.4);
-}
-
-.tab-btn {
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-.tab-btn.active {
-  background: linear-gradient(135deg, #165DFF, #36D399);
-  transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(22, 93, 255, 0.35);
-}
-
-.badge-pop {
-  background: linear-gradient(135deg, #F59E0B, #EF4444);
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 20px;
-  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
-}
-
-.badge-value {
-  background: linear-gradient(135deg, #10B981, #0EA5E9);
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 20px;
-  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
-}
-
-.floating-alert { position: fixed; bottom: 24px; right: 24px; z-index: 999; animation: fadeInUp 0.5s ease forwards; }
-.hidden { display: none !important; }
-.logo-gradient { 
-  background: linear-gradient(135deg, #165DFF, #36D399); 
-  -webkit-background-clip: text; 
-  -webkit-text-fill-color: transparent; 
-}
-.modal-backdrop { 
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
-  backdrop-filter: blur(8px); z-index: 300; 
-  display: flex; align-items: center; justify-content: center; padding: 1rem;
-  animation: fadeInUp 0.3s ease;
-}
-
-#canvas-container { 
-  position: absolute; top: 0; left: 0; width: 100%; height: 500px; 
-  z-index: 0; pointer-events: none; 
-}
-.section { position: relative; z-index: 1; }
-
-.chat-bubble { position: fixed; bottom: 24px; left: 24px; z-index: 100; }
-.rating-star { cursor: pointer; transition: all 0.2s ease; font-size: 1.5rem; }
-.rating-star:hover { color: gold; transform: scale(1.2); }
-
-/* ================= LIGHT THEME OVERRIDES ================= */
-body[data-theme="light"] {
-  background: #F3F5F4 !important;
-  color: #0F172A;
-}
-body[data-theme="light"] #canvas-container { display: none; }
-body[data-theme="light"] nav {
-  margin: 10px 10px 0; width: auto; border-radius: 20px !important;
-  background: rgba(255,255,255,0.92) !important;
-  box-shadow: 0 8px 30px rgba(15,23,42,0.08);
-}
-body[data-theme="light"] header.section {
-  background: linear-gradient(135deg, #0B3B2E 0%, #12503D 55%, #0B3B2E 100%);
-  border-radius: 32px; margin: 16px; padding: 50px 24px;
-  box-shadow: 0 24px 60px rgba(11,59,46,0.28);
-}
-body[data-theme="light"] header.section h1,
-body[data-theme="light"] header.section p,
-body[data-theme="light"] header.section span:not(.gradient-hero) { color: #fff !important; }
-body[data-theme="light"] .tab-btn {
-  background: #fff !important; color: #0F172A !important; border-radius: 20px !important;
-  box-shadow: 0 4px 18px rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.06);
-}
-body[data-theme="light"] .tab-btn.active {
-  background: linear-gradient(135deg, #0B3B2E, #15694F) !important; color: #fff !important;
-  box-shadow: 0 14px 30px rgba(11,59,46,0.35) !important;
-}
-body[data-theme="light"] .package-card {
-  background: #fff !important; border-radius: 22px !important;
-  border-color: rgba(15,23,42,0.06) !important; box-shadow: 0 6px 22px rgba(15,23,42,0.06) !important;
-  color: #0F172A !important;
-}
-body[data-theme="light"] section#track > div,
-body[data-theme="light"] #faq-container > div,
-body[data-theme="light"] section#feedback > div,
-body[data-theme="light"] .bg-white\/5 {
-  background: #fff !important; border-radius: 22px !important;
-  border-color: rgba(15,23,42,0.06) !important; box-shadow: 0 6px 22px rgba(15,23,42,0.06) !important;
-  color: #0F172A !important;
-}
-body[data-theme="light"] input, body[data-theme="light"] textarea { color: #0F172A !important; }
-</style>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: { primary: '#165DFF', secondary: '#36D399', accent: '#F87272', dark: '#0F172A' },
-      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
-    }
-  }
-}
-</script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Godfred Data Hub - Cheap Data Bundles Ghana</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.5.1/dist/confetti.browser.min.js"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .glass { background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        body[data-theme="light"] .glass { background: rgba(0, 0, 0, 0.03); border: 1px solid rgba(0, 0, 0, 0.1); }
+        #canvas-container { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; z-index: -1; pointer-events: none; }
+        .net-badge-MTN { background-color: rgba(245, 158, 11, 0.15); color: #f59e0b; border-color: rgba(245, 158, 11, 0.3); }
+        .net-badge-Telecel { background-color: rgba(239, 68, 68, 0.15); color: #ef4444; border-color: rgba(239, 68, 68, 0.3); }
+        .net-badge-AirtelTigo { background-color: rgba(59, 130, 246, 0.15); color: #3b82f6; border-color: rgba(59, 130, 246, 0.3); }
+        .btn-MTN { background-color: #f59e0b; color: #0f172a; }
+        .btn-Telecel { background-color: #ef4444; color: #ffffff; }
+        .btn-AirtelTigo { background-color: #3b82f6; color: #ffffff; }
+    </style>
 </head>
-<body>
-<script>
-  (function(){
-    const hour = new Date().getHours();
-    document.body.setAttribute('data-theme', (hour >= 6 && hour < 18) ? 'light' : 'dark');
-  })();
-</script>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans transition-colors duration-300">
 
-<!-- Toast Container -->
-<div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
+    <div id="canvas-container"></div>
 
-<!-- 3D Animated Background Canvas -->
-<div id="canvas-container"></div>
-
-<!-- Top Status Strip -->
-<div class="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-emerald-950/80 border-b border-white/10 py-2 px-4 text-xs flex flex-wrap justify-between items-center gap-2 text-center z-50 relative">
-  <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between w-full gap-2">
-    <span class="flex items-center gap-2 font-semibold text-emerald-400 mx-auto sm:mx-0">
-      <span class="relative flex h-2 w-2">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-      </span>
-      🟢 All Networks Operational (MTN • Telecel • AirtelTigo)
-    </span>
-    <span class="text-gray-300 hidden md:flex items-center gap-2 mx-auto sm:mx-0">
-      <span id="promo-banner" class="transition-opacity duration-500">💡 Tip: Fast automated delivery 24/7!</span>
-    </span>
-  </div>
-</div>
-
-<!-- Navigation -->
-<nav class="sticky top-0 z-50 bg-dark/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 animate-fade-up">
-  <div class="max-w-7xl mx-auto flex justify-between items-center">
-    <a href="#" class="flex items-center gap-2">
-      <div class="w-10 h-10 rounded-full gradient-hero flex items-center justify-center font-bold text-xl animate-pulse-glow">G</div>
-      <span class="font-bold text-xl logo-gradient">Godfred Data Hub</span>
-    </a>
-    <div class="hidden md:flex gap-6 text-sm">
-      <a href="#packages" class="hover:text-secondary transition-colors">Packages</a>
-      <a href="#track" class="hover:text-secondary transition-colors">Track Order</a>
-      <a href="#faq" class="hover:text-secondary transition-colors">FAQ</a>
-      <a href="#feedback" class="hover:text-secondary transition-colors">Feedback</a>
-      <button onclick="openAdmin()" class="text-accent hover:underline font-semibold">Admin</button>
-    </div>
-    <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
-    </button>
-  </div>
-  <div id="mobile-menu" class="hidden md:hidden mt-3 space-y-2 px-2 animate-fade-up">
-    <a href="#packages" class="block py-2 hover:text-secondary">Packages</a>
-    <a href="#track" class="block py-2 hover:text-secondary">Track Order</a>
-    <a href="#faq" class="block py-2 hover:text-secondary">FAQ</a>
-    <a href="#feedback" class="block py-2 hover:text-secondary">Feedback</a>
-    <button onclick="openAdmin()" class="block py-2 text-accent">Admin Login</button>
-  </div>
-</nav>
-
-<!-- Live Purchase Ticker Bar -->
-<div class="w-full bg-white/5 border-b border-white/10 py-2.5 overflow-hidden relative z-40">
-  <div class="max-w-7xl mx-auto px-4 flex items-center justify-between text-xs text-gray-300">
-    <div class="flex items-center gap-2 flex-shrink-0 bg-secondary/20 border border-secondary/30 px-2.5 py-1 rounded-full text-secondary font-bold text-[11px]">
-      <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> LIVE PURCHASES
-    </div>
-    <div class="overflow-hidden relative w-full ml-4">
-      <div id="ticker-text" class="whitespace-nowrap font-medium text-gray-200 transition-all duration-500">
-        🔥 Kwame just bought 5GB MTN · 2m ago
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Hero Section -->
-<header class="section min-h-[85vh] flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-12 gap-8">
-  <div class="flex-1 text-center md:text-left">
-    <!-- Speed Badge -->
-    <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-4 py-1.5 rounded-full text-xs font-semibold text-emerald-400 mb-6 animate-fade-up">
-      <span class="relative flex h-2 w-2">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-      </span>
-      ⚡ Delivered within 5 minutes
-    </div>
-
-    <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-fade-up">
-      Fast &amp; Affordable Data<br>
-      <span class="text-secondary animate-bounce-slow inline-block">MTN • AirtelTigo • Telecel</span>
-    </h1>
-    <p class="text-lg text-gray-300 max-w-xl mb-8 animate-fade-up">
-      Pay seamlessly via Mobile Money. Fast delivery guaranteed 24/7.
-    </p>
-    
-    <div class="flex flex-wrap justify-center md:justify-start gap-3 animate-fade-up">
-      <a href="#packages" class="gradient-hero px-7 py-3.5 rounded-full text-base font-semibold transition-all hover:scale-105 animate-pulse-glow flex items-center gap-2 shadow-xl">
-        Buy Data Now 
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>
-      </a>
-      <a href="https://whatsapp.com/channel/0029VbEYidXGpLHS9AxCAO2D" target="_blank" 
-         class="bg-green-600/80 hover:bg-green-600 px-5 py-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 border border-green-400/30">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.6 6.32A8.86 8.86 0 0 0 11.9 4C7 4 3 8 3 12.9c0 1.6.42 3.13 1.22 4.47L3 21l3.73-1.18A8.9 8.9 0 0 0 11.9 21.8c4.9 0 8.9-4 8.9-8.9a8.86 8.86 0 0 0-3.2-6.58zm-5.7 13.7a7.4 7.4 0 0 1-3.77-1.03l-.27-.16-2.24.71.72-2.18-.18-.28a7.4 7.4 0 0 1-1.14-3.96c0-4.1 3.34-7.44 7.44-7.44a7.4 7.4 0 0 1 5.26 2.18 7.4 7.4 0 0 1 2.18 5.26c0 4.1-3.34 7.44-7.44 7.44zm4.08-5.58c-.22-.11-1.32-.65-1.53-.72-.2-.08-.35-.11-.5.11-.15.22-.57.72-.7.87-.13.15-.26.17-.48.06-.22-.11-.94-.35-1.8-1.11-.66-.6-1.11-1.33-1.24-1.55-.13-.22-.01-.34.1-.45.1-.1.22-.26.33-.4.11-.13.15-.22.22-.37.07-.15.04-.28-.02-.4-.06-.11-.5-1.2-.68-1.65-.18-.43-.36-.37-.5-.38h-.43c-.15 0-.4.06-.6.28-.2.22-.8.78-.8 1.9 0 1.12.82 2.2.93 2.35.11.15 1.6 2.44 3.87 3.42.54.23.96.37 1.29.48.54.17 1.03.15 1.42.09.43-.06 1.32-.54 1.51-1.06.19-.52.19-.96.13-1.06-.05-.1-.2-.16-.42-.27z"/></svg>
-        WhatsApp
-      </a>
-      <a href="https://t.me/godfreddatahub" target="_blank" 
-         class="bg-sky-600/80 hover:bg-sky-600 px-5 py-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 border border-sky-400/30">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.38-.49 1.07-.75 4.19-1.82 6.98-3.02 8.38-3.6 3.98-1.65 4.81-1.94 5.35-1.95.12 0 .38.03.55.17.14.12.18.28.2.46-.02.07-.02.14-.03.22z"/></svg>
-        Telegram
-      </a>
-    </div>
-  </div>
-
-  <!-- Hero Mascot / Visual SVG Graphic -->
-  <div class="flex-1 flex justify-center items-center animate-float relative">
-    <div class="absolute w-72 h-72 bg-primary/20 rounded-full blur-3xl -z-10"></div>
-    <svg viewBox="0 0 320 320" class="w-72 h-72 md:w-96 md:h-96 filter drop-shadow-2xl">
-      <circle cx="160" cy="160" r="140" fill="none" stroke="#36D399" stroke-width="2" stroke-dasharray="8 8" class="opacity-40 animate-spin" style="animation-duration: 20s;"/>
-      <circle cx="160" cy="160" r="110" fill="rgba(22, 93, 255, 0.1)" stroke="#165DFF" stroke-width="3"/>
-      <rect x="105" y="60" width="110" height="200" rx="20" fill="#0F172A" stroke="#36D399" stroke-width="4"/>
-      <rect x="115" y="75" width="90" height="150" rx="10" fill="#1E293B"/>
-      <path d="M125 180 Q 145 150 160 170 T 195 160" fill="none" stroke="#36D399" stroke-width="3" stroke-linecap="round"/>
-      <path d="M125 150 Q 145 130 160 145 T 195 135" fill="none" stroke="#165DFF" stroke-width="3" stroke-linecap="round"/>
-      <polygon points="165,95 145,135 162,135 152,175 175,125 158,125" fill="#F59E0B" class="animate-pulse"/>
-      <circle cx="60" cy="120" r="18" fill="#165DFF" class="animate-bounce"/>
-      <text x="60" y="125" fill="white" font-size="10" font-weight="bold" text-anchor="middle">5G</text>
-      <circle cx="260" cy="190" r="20" fill="#36D399" class="animate-bounce" style="animation-delay: 1s;"/>
-      <text x="260" y="195" fill="#0F172A" font-size="10" font-weight="bold" text-anchor="middle">MoMo</text>
-    </svg>
-  </div>
-</header>
-
-<!-- Floating Alert Notification -->
-<div id="purchase-alert" class="floating-alert hidden bg-dark/95 backdrop-blur border border-secondary/40 rounded-xl p-3.5 max-w-xs shadow-2xl">
-  <div class="flex items-start gap-3">
-    <div class="text-secondary text-2xl animate-bounce">⚡</div>
-    <div>
-      <p class="text-sm font-semibold text-white"><span id="buyer-name">Someone</span> bought data!</p>
-      <p class="text-xs text-secondary font-medium"><span id="buyer-pkg">5GB MTN</span> · Delivered</p>
-      <p class="text-[10px] text-gray-400 mt-0.5" id="deliver-time">Just now</p>
-    </div>
-  </div>
-</div>
-
-<!-- Packages Section -->
-<section id="packages" class="section px-4 py-16 max-w-6xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-2 animate-fade-up">📦 Choose Your Network</h2>
-  <p class="text-center text-gray-400 mb-10 animate-fade-up">Select a network to unlock instant bundles</p>
-  
-  <!-- Network Tabs -->
-  <div class="flex flex-wrap justify-center gap-4 mb-8 animate-fade-up">
-    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium flex items-center gap-2" data-network="mtn">
-      <span class="w-3 h-3 rounded-full bg-yellow-400"></span> MTN
-    </button>
-    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium flex items-center gap-2" data-network="airteltigo">
-      <span class="w-3 h-3 rounded-full bg-red-400"></span> AirtelTigo
-    </button>
-    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium flex items-center gap-2" data-network="telecel">
-      <span class="w-3 h-3 rounded-full bg-green-400"></span> Telecel
-    </button>
-  </div>
-
-  <!-- Phone Input Card -->
-  <div class="max-w-md mx-auto mb-10 bg-white/5 p-5 rounded-2xl border border-white/10 animate-fade-up shadow-xl">
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Recipient Phone Number</label>
-    <div class="flex gap-2">
-      <input type="tel" id="buyer-number" placeholder="054XXXXXXX" 
-        class="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-primary outline-none text-white transition-colors"
-        oninput="detectNetwork(this.value)">
-      <span id="detected-network" class="flex items-center px-4 rounded-xl bg-white/5 text-sm font-bold text-gray-400">—</span>
-    </div>
-  </div>
-
-  <!-- Packages Container -->
-  <div id="packages-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-5">
-    <p class="col-span-full text-center text-gray-400 py-10 animate-fade-scale">👆 Select a network above to view packages</p>
-  </div>
-</section>
-
-<!-- Order Tracking & History Section -->
-<section id="track" class="section px-4 py-16 max-w-xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-2 animate-fade-up">🔍 Track Your Order</h2>
-  <p class="text-center text-gray-400 mb-8">Enter your phone number to check status</p>
-  <div class="bg-white/5 p-6 rounded-2xl border border-white/10 animate-fade-up shadow-2xl">
-    <input type="tel" id="track-number" placeholder="Enter phone number" 
-      class="w-full px-4 py-3.5 rounded-xl bg-white/10 border border-white/20 mb-4 focus:border-primary outline-none transition-colors"
-      onkeyup="checkOrderStatus()">
-    <button onclick="checkOrderStatus()" class="w-full bg-primary hover:bg-primary/90 py-3.5 rounded-xl font-bold transition-all hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> Check Order History
-    </button>
-    <div id="track-result" class="mt-5 hidden animate-fade-scale"></div>
-  </div>
-</section>
-
-<!-- FAQ Section -->
-<section id="faq" class="section px-4 py-16 max-w-2xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-8 animate-fade-up">❓ Frequently Asked Questions</h2>
-  <div id="faq-container" class="space-y-4"></div>
-</section>
-
-<!-- Feedback Section -->
-<section id="feedback" class="section px-4 py-16 max-w-xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-8 animate-fade-up">⭐ Rate Us</h2>
-  <div class="bg-white/5 p-6 rounded-2xl border border-white/10 animate-fade-up shadow-2xl">
-    <div class="flex justify-center gap-2 text-4xl mb-6" id="rating-stars">
-      <span class="rating-star text-gray-500" data-val="1">★</span>
-      <span class="rating-star text-gray-500" data-val="2">★</span>
-      <span class="rating-star text-gray-500" data-val="3">★</span>
-      <span class="rating-star text-gray-500" data-val="4">★</span>
-      <span class="rating-star text-gray-500" data-val="5">★</span>
-    </div>
-    <textarea id="feedback-text" rows="3" placeholder="Write your feedback..."
-      class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 mb-4 focus:border-primary outline-none transition-colors"></textarea>
-    <button onclick="submitFeedback()" class="w-full bg-secondary hover:bg-secondary/90 py-3.5 rounded-xl font-bold text-slate-900 transition-all hover:scale-[1.01]">
-      Submit Feedback
-    </button>
-    <p id="feedback-msg" class="mt-4 text-center text-secondary font-medium hidden">Thank you for rating us! ✅</p>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer class="border-t border-white/10 py-8 px-4 text-center text-sm text-gray-400">
-  <p class="mb-2">© 2026 Godfred Data Hub. All rights reserved.</p>
-  <p class="mb-3">MTN • AirtelTigo • Telecel — Automated MoMo Delivery</p>
-  <div class="flex justify-center gap-4 text-xs font-semibold">
-    <a href="https://whatsapp.com/channel/0029VbEYidXGpLHS9AxCAO2D" target="_blank" class="text-green-400 hover:underline">WhatsApp Hub</a>
-    <span>•</span>
-    <a href="https://t.me/godfreddatahub" target="_blank" class="text-sky-400 hover:underline">Telegram Channel</a>
-  </div>
-</footer>
-
-<!-- Interactive AI Chatbot -->
-<div class="chat-bubble">
-  <button onclick="toggleChat()" class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center animate-pulse-glow shadow-2xl">
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-    </svg>
-  </button>
-  <div id="chat-box" class="hidden absolute bottom-16 left-0 w-80 sm:w-96 bg-dark border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-scale">
-    <div class="bg-primary/20 px-4 py-3 font-bold border-b border-white/10 flex justify-between items-center">
-      <span class="flex items-center gap-2">🤖 Godfred AI Assistant <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span></span>
-      <button onclick="toggleChat()" class="text-gray-400 hover:text-white text-lg">&times;</button>
-    </div>
-    <div id="chat-messages" class="h-80 overflow-y-auto p-4 space-y-3 text-xs sm:text-sm">
-      <p class="text-gray-300 animate-fade-up bg-white/5 p-3 rounded-xl border border-white/10">
-        👋 Hi! I'm your Godfred Data Hub Assistant. Ask me anything about bundle prices, delivery times, payment, or order tracking!
-      </p>
-    </div>
-    <div class="p-3 border-t border-white/10 flex gap-2">
-      <input type="text" id="chat-input" placeholder="Type your question..." 
-        class="flex-1 px-3 py-2 rounded-xl bg-white/10 border border-white/20 outline-none text-xs sm:text-sm text-white"
-        onkeydown="if(event.key==='Enter')sendChat()">
-      <button onclick="sendChat()" class="bg-primary px-3.5 rounded-xl hover:bg-primary/90 font-bold text-white">➤</button>
-    </div>
-  </div>
-</div>
-
-<!-- MoMo Payment Modal -->
-<div id="payment-modal" class="hidden modal-backdrop">
-  <div class="bg-dark border border-white/10 rounded-2xl max-w-md w-full p-6 animate-fade-scale shadow-2xl">
-    <div class="flex justify-between items-center mb-5">
-      <h3 class="text-xl font-bold flex items-center gap-2">💳 MoMo Checkout</h3>
-      <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
-    </div>
-    
-    <div id="pay-step-1">
-      <div class="bg-white/5 p-4 rounded-xl mb-5 animate-fade-up border border-white/10">
-        <p class="mb-1 text-sm text-gray-300">Package: <strong class="text-white" id="pay-pkg"></strong></p>
-        <p class="mb-1 text-sm text-gray-300">Network: <strong class="text-white" id="pay-net"></strong></p>
-        <p class="mb-1 text-sm text-gray-300">Recipient: <strong class="text-white" id="pay-phone"></strong></p>
-        <p class="text-2xl font-bold text-secondary mt-2">GH₵ <span id="pay-amount"></span></p>
-      </div>
-      
-      <p class="mb-2 font-semibold text-xs text-gray-400 uppercase tracking-wider">Select Payment Network</p>
-      <div class="space-y-2 mb-5">
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-yellow-400 transition-all">
-          <input type="radio" name="momo-method" value="mtn" checked class="accent-primary">
-          <span class="font-bold text-yellow-400">MTN MoMo</span>
-        </label>
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-red-400 transition-all">
-          <input type="radio" name="momo-method" value="airteltigo" class="accent-primary">
-          <span class="font-bold text-red-400">AirtelTigo Money</span>
-        </label>
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-green-400 transition-all">
-          <input type="radio" name="momo-method" value="telecel" class="accent-primary">
-          <span class="font-bold text-green-400">Telecel Cash</span>
-        </label>
-      </div>
-      
-      <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Your MoMo Paying Number</label>
-      <input type="tel" id="momo-number" placeholder="054XXXXXXX" 
-        class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 mb-5 focus:border-primary outline-none transition-colors">
-      
-      <button onclick="initiatePayment()" class="w-full bg-secondary hover:bg-secondary/90 text-slate-900 font-bold py-3.5 rounded-xl transition-all hover:scale-[1.01] shadow-xl">
-        ⚡ Confirm &amp; Pay
-      </button>
-    </div>
-    
-    <div id="pay-step-2" class="hidden text-center py-6">
-      <div class="text-5xl mb-4 animate-bounce">📲</div>
-      <h4 class="text-xl font-bold mb-2">Prompt Sent to Phone</h4>
-      <p class="text-sm text-gray-400 mb-5">Check your phone screen and enter your MoMo PIN to authorize payment.</p>
-      <div class="bg-white/5 p-4 rounded-xl mb-5 border border-white/10">
-        <p class="text-sm">Amount: <span class="font-bold text-secondary">GH₵ <span id="confirm-amount"></span></span></p>
-        <p class="text-xs text-gray-400 mt-1">Ref: <span id="confirm-ref"></span></p>
-      </div>
-      <button onclick="verifyPayment()" id="verify-btn" class="w-full bg-primary hover:bg-primary/90 font-bold py-3.5 rounded-xl mb-3 transition-all shadow-xl">
-        ✅ I Have Paid / Confirm
-      </button>
-      <p id="payment-status" class="text-xs text-gray-400">Waiting for MoMo confirmation...</p>
-    </div>
-  </div>
-</div>
-
-<!-- Admin Portal -->
-<div id="admin-modal" class="hidden modal-backdrop p-0 items-stretch justify-start z-[999]">
-  <div class="flex w-full h-full bg-slate-50 text-slate-800 overflow-hidden">
-    <aside class="w-64 bg-white border-r border-slate-200 p-6 flex-shrink-0 hidden sm:flex flex-col justify-between">
-      <div>
-        <div class="flex items-center gap-2 mb-8">
-          <div class="w-9 h-9 rounded-xl gradient-hero flex items-center justify-center text-white font-bold">G</div>
-          <span class="font-bold text-lg text-emerald-800">Admin Portal</span>
+    <!-- Ticker Bar -->
+    <div class="bg-indigo-900/40 text-indigo-200 text-xs py-1.5 px-4 overflow-hidden border-b border-indigo-500/20">
+        <div class="whitespace-nowrap animate-marquee inline-block" id="ticker-content">
+            🔥 Live Orders: 024****515 bought 10GB MTN • 020****890 bought 5GB Telecel • 026****112 bought 25GB AirtelTigo • 055****331 bought 50GB MTN
         </div>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Navigation</p>
-        <nav class="space-y-1">
-          <div class="p-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold cursor-pointer" onclick="switchAdminTab('dashboard')">Dashboard</div>
-          <div class="p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600" onclick="switchAdminTab('packages')">Data Packages</div>
-          <div class="p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600" onclick="switchAdminTab('sales')">Sales &amp; Orders</div>
-        </nav>
-      </div>
-      <button onclick="closeAdmin()" class="w-full py-2.5 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200">Close Portal</button>
-    </aside>
-    <main class="flex-1 overflow-y-auto p-6 sm:p-10">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-slate-900" id="admin-page-title">⚙️ Admin Control Center</h2>
-        <button onclick="closeAdmin()" class="text-slate-400 hover:text-slate-700 text-2xl">&times;</button>
-      </div>
+    </div>
 
-      <div id="admin-login" class="flex items-center justify-center min-h-[50vh]">
-        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-slate-100">
-          <h3 class="text-xl font-bold mb-2">Admin Sign In</h3>
-          <p class="text-sm text-slate-500 mb-5">Enter your administrative passcode</p>
-          <input type="password" id="admin-pass" placeholder="Enter password" 
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none focus:border-emerald-500">
-          <button onclick="verifyAdmin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg">Sign In</button>
+    <!-- Header Navigation -->
+    <nav class="sticky top-0 z-40 glass border-b border-slate-800 px-6 py-4 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-indigo-600 flex items-center justify-center font-bold text-xl shadow-lg">G</div>
+            <span class="text-xl font-extrabold tracking-tight bg-gradient-to-r from-amber-400 to-indigo-400 bg-clip-text text-transparent">Godfred Data Hub</span>
         </div>
-      </div>
+        <div class="flex items-center gap-3">
+            <button onclick="toggleTheme()" class="p-2.5 rounded-xl glass hover:bg-slate-800 text-amber-400 transition" title="Toggle Light/Dark Theme">
+                <i class="fas fa-moon" id="theme-icon"></i>
+            </button>
+            <button onclick="openAdminModal()" class="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+                <i class="fas fa-user-shield mr-1"></i> Admin Portal
+            </button>
+        </div>
+    </nav>
 
-      <div id="admin-panel" class="hidden">
-        <div id="adm-tab-dashboard" class="adm-tab active">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md"><p class="text-xs opacity-80 uppercase">Today's Sales</p><p class="text-3xl font-bold mt-1" id="adm-stat-sales">0</p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Estimated Profit</p><p class="text-3xl font-bold text-emerald-600 mt-1">GH₵<span id="adm-stat-profit">0.00</span></p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Bundles Delivered</p><p class="text-3xl font-bold text-slate-800 mt-1" id="adm-stat-packages">0</p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Total Visits</p><p class="text-3xl font-bold text-slate-800 mt-1" id="adm-stat-visitors">0</p></div>
-          </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Recent Transactions</h4>
-            <div id="adm-recent-orders" class="text-sm text-slate-600">No recent orders yet.</div>
-          </div>
+    <!-- Main Section -->
+    <main class="max-w-6xl mx-auto px-4 py-8 flex-1 w-full space-y-8">
+
+        <!-- Banner -->
+        <section class="text-center space-y-3 max-w-2xl mx-auto">
+            <h1 class="text-4xl md:text-5xl font-black tracking-tight leading-tight">Select Network & Buy<br><span class="text-amber-400">Non-Expiry Data</span></h1>
+            <p class="text-slate-400 text-sm md:text-base">Click your network below to view available non-expiry bundle rates (1GB to 100GB).</p>
+        </section>
+
+        <!-- Network Selector Tabs -->
+        <div class="flex justify-center gap-3" id="network-tabs">
+            <button onclick="selectNetwork('MTN')" data-network="MTN" class="tab-btn active px-6 py-3 rounded-2xl font-bold text-sm glass border-amber-500 text-amber-400 flex items-center gap-2 transition-all shadow-lg">
+                <span class="w-3 h-3 rounded-full bg-amber-400"></span> MTN Ghana
+            </button>
+            <button onclick="selectNetwork('Telecel')" data-network="Telecel" class="tab-btn px-6 py-3 rounded-2xl font-bold text-sm glass border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+                <span class="w-3 h-3 rounded-full bg-red-500"></span> Telecel
+            </button>
+            <button onclick="selectNetwork('AirtelTigo')" data-network="AirtelTigo" class="tab-btn px-6 py-3 rounded-2xl font-bold text-sm glass border-transparent text-slate-400 hover:text-white flex items-center gap-2 transition-all">
+                <span class="w-3 h-3 rounded-full bg-blue-500"></span> AirtelTigo
+            </button>
         </div>
-        <div id="adm-tab-packages" class="adm-tab hidden">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Edit Package Prices</h4>
-            <div id="price-editor" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-            <button onclick="saveAllPrices()" class="mt-6 bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:bg-emerald-700 transition-all">Save All Changes</button>
-          </div>
+
+        <!-- Phone Input Block -->
+        <div class="max-w-md mx-auto glass p-6 rounded-3xl space-y-3 border border-slate-800">
+            <label class="block text-xs font-semibold uppercase text-slate-400 tracking-wider">Recipient Phone Number</label>
+            <div class="relative">
+                <input type="tel" id="recipient-phone" oninput="detectNetworkPrefix(this.value)" placeholder="e.g. 0243495615" class="w-full bg-slate-900/90 border border-slate-700 rounded-2xl px-4 py-3.5 text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition font-mono text-base">
+                <span id="detected-badge" class="absolute right-3 top-3.5 text-xs font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-400">Auto Network</span>
+            </div>
         </div>
-        <div id="adm-tab-sales" class="adm-tab hidden">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Full Order Logs</h4>
-            <div id="adm-all-sales" class="text-sm text-slate-600">No sales recorded.</div>
-          </div>
+
+        <!-- Dynamic Network Heading Header -->
+        <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+                <span id="network-indicator-dot" class="w-3 h-3 rounded-full bg-amber-400"></span>
+                <h2 id="network-heading" class="text-xl font-black text-slate-100">MTN Non-Expiry Data Packages</h2>
+            </div>
+            <span class="text-xs text-emerald-400 font-bold bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/20">All Bundles Non-Expiry</span>
         </div>
-      </div>
+
+        <!-- Bundle Cards Grid -->
+        <div id="bundle-grid" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <!-- Dynamically populated per selected network -->
+        </div>
+
     </main>
-  </div>
-</div>
 
-<script>
-// ========== CONFIG ==========
-const CONFIG = {
-  adminPassword: "godfred123",
-  momoApiUrl: "https://api.techlink.com.gh/v1/payment/charge"
-};
+    <!-- Admin Price Control Center Modal -->
+    <div id="admin-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass max-w-2xl w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-4">
+                <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-sliders-h text-amber-400"></i> Admin Package Price Manager</h2>
+                <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times text-lg"></i></button>
+            </div>
 
-// ========== DEFAULT PACKAGES (CLEANED - NO VALIDITY PROPERTIES) ==========
-const defaultPackages = {
-  mtn: [
-    {size: "100MB", price: "1.00", cost: "0.70"},
-    {size: "250MB", price: "2.00", cost: "1.40"},
-    {size: "500MB", price: "3.50", cost: "2.45"},
-    {size: "1GB", price: "6.00", cost: "4.20", badge: "best_value"},
-    {size: "2GB", price: "10.00", cost: "7.00"},
-    {size: "3GB", price: "14.00", cost: "9.80"},
-    {size: "5GB", price: "22.00", cost: "15.40", badge: "popular"},
-    {size: "10GB", price: "38.00", cost: "26.60"},
-    {size: "20GB", price: "70.00", cost: "49.00"},
-    {size: "50GB", price: "150.00", cost: "105.00"}
-  ],
-  airteltigo: [
-    {size: "100MB", price: "0.90", cost: "0.60"},
-    {size: "500MB", price: "3.20", cost: "2.10"},
-    {size: "1GB", price: "5.50", cost: "3.70", badge: "best_value"},
-    {size: "2GB", price: "9.00", cost: "6.00"},
-    {size: "5GB", price: "20.00", cost: "13.40", badge: "popular"},
-    {size: "10GB", price: "35.00", cost: "23.50"},
-    {size: "20GB", price: "65.00", cost: "43.50"},
-    {size: "50GB", price: "135.00", cost: "90.50"}
-  ],
-  telecel: [
-    {size: "100MB", price: "0.80", cost: "0.55"},
-    {size: "500MB", price: "3.00", cost: "2.00"},
-    {size: "1GB", price: "5.00", cost: "3.40", badge: "best_value"},
-    {size: "2GB", price: "8.50", cost: "5.75"},
-    {size: "5GB", price: "18.50", cost: "12.60", badge: "popular"},
-    {size: "10GB", price: "32.00", cost: "21.80"},
-    {size: "20GB", price: "60.00", cost: "40.80"},
-    {size: "50GB", price: "125.00", cost: "85.00"}
-  ]
-};
+            <div id="admin-auth" class="space-y-4">
+                <p class="text-sm text-slate-400">Enter Admin Passcode (Default: godfred123):</p>
+                <input type="password" id="admin-pass" placeholder="Password" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-400">
+                <button onclick="verifyAdmin()" class="w-full bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold py-3 rounded-xl transition">Access Admin Panel</button>
+            </div>
 
-let saved = localStorage.getItem('gdhub_prices');
-let packages = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPackages));
-let activeNetwork = null;
-let orders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
-let currentPurchase = null;
+            <div id="admin-panel" class="hidden space-y-6">
+                <!-- Overview Stats -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                        <span class="text-xs text-slate-400">Total Sales Today</span>
+                        <div class="text-2xl font-bold text-amber-400" id="stat-sales">GH₵ 0.00</div>
+                    </div>
+                    <div class="p-4 rounded-2xl bg-slate-950 border border-slate-800">
+                        <span class="text-xs text-slate-400">Est. Profit Margin (+GH₵ 1.10/pkg)</span>
+                        <div class="text-2xl font-bold text-emerald-400" id="stat-profit">GH₵ 0.00</div>
+                    </div>
+                </div>
 
-// ========== TOAST NOTIFICATION SYSTEM ==========
-function showToast(msg, type = 'info') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  const bg = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-emerald-600' : 'bg-primary';
-  toast.className = `${bg} text-white text-sm font-semibold px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-2 pointer-events-auto border border-white/20 animate-fade-up`;
-  toast.innerHTML = `<span>${msg}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-10px)';
-    toast.style.transition = 'all 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
-}
+                <!-- Network Tab Filter inside Admin -->
+                <div class="flex gap-2 border-b border-slate-800 pb-2">
+                    <button onclick="switchAdminNetTab('MTN')" id="admin-tab-MTN" class="px-4 py-1.5 text-xs rounded-xl font-bold bg-amber-500 text-slate-950">MTN</button>
+                    <button onclick="switchAdminNetTab('Telecel')" id="admin-tab-Telecel" class="px-4 py-1.5 text-xs rounded-xl font-bold bg-slate-800 text-slate-300">Telecel</button>
+                    <button onclick="switchAdminNetTab('AirtelTigo')" id="admin-tab-AirtelTigo" class="px-4 py-1.5 text-xs rounded-xl font-bold bg-slate-800 text-slate-300">AirtelTigo</button>
+                </div>
 
-// ========== CONFETTI ANIMATION ==========
-function triggerConfetti() {
-  const canvas = document.createElement('canvas');
-  canvas.style.position = 'fixed';
-  canvas.style.top = '0'; canvas.style.left = '0';
-  canvas.style.width = '100vw'; canvas.style.height = '100vh';
-  canvas.style.pointerEvents = 'none'; canvas.style.zIndex = '99999';
-  document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-  const particles = Array.from({length: 70}, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height - canvas.height,
-    r: Math.random() * 6 + 4,
-    d: Math.random() * 70,
-    color: ['#165DFF', '#36D399', '#F87272', '#F59E0B', '#EC4899'][Math.floor(Math.random() * 5)],
-    tilt: Math.random() * 10 - 10,
-    tiltAngleIncremental: Math.random() * 0.07 + 0.05,
-    tiltAngle: 0
-  }));
-  let ticks = 0;
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color;
-      ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
-      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
-      ctx.stroke();
-      p.tiltAngle += p.tiltAngleIncremental;
-      p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
-      p.tilt = Math.sin(p.tiltAngle) * 15;
-    });
-    ticks++;
-    if (ticks < 140) requestAnimationFrame(draw); else canvas.remove();
-  }
-  draw();
-}
-
-// ========== ROTATING PROMO BANNER & TICKER ==========
-const promoTips = [
-  "💡 Tip: Fast automated delivery 24/7!",
-  "⚡ Orders are processed automatically within 5 minutes!",
-  "🎁 Special discount on 10GB & 20GB bundles today!",
-  "📱 Works on all unlocked SIMs & router devices!"
-];
-let promoIdx = 0;
-setInterval(() => {
-  const el = document.getElementById('promo-banner');
-  if (el) {
-    promoIdx = (promoIdx + 1) % promoTips.length;
-    el.style.opacity = '0';
-    setTimeout(() => {
-      el.textContent = promoTips[promoIdx];
-      el.style.opacity = '1';
-    }, 400);
-  }
-}, 5000);
-
-const tickerItems = [
-  "Kwame bought 5GB MTN · 2m ago",
-  "Ama bought 2GB Telecel · 4m ago",
-  "Kofi bought 10GB AirtelTigo · 6m ago",
-  "Abena bought 50GB MTN · 9m ago",
-  "Yaw bought 1GB Telecel · 12m ago"
-];
-let tickerIdx = 0;
-setInterval(() => {
-  const el = document.getElementById('ticker-text');
-  if (el) {
-    tickerIdx = (tickerIdx + 1) % tickerItems.length;
-    el.style.opacity = '0';
-    setTimeout(() => {
-      el.textContent = "🔥 " + tickerItems[tickerIdx];
-      el.style.opacity = '1';
-    }, 400);
-  }
-}, 4000);
-
-// ========== RENDER PACKAGES WITH SKELETON & BADGES ==========
-function renderPackages() {
-  const container = document.getElementById('packages-container');
-  if (!activeNetwork) {
-    container.innerHTML = '<p class="col-span-full text-center text-gray-400 py-10 animate-fade-scale">👆 Click a network above to view packages</p>';
-    return;
-  }
-
-  container.innerHTML = Array(8).fill(0).map(() => `
-    <div class="h-36 rounded-2xl shimmer-skeleton border border-white/5"></div>
-  `).join('');
-
-  setTimeout(() => {
-    const list = packages[activeNetwork];
-
-    container.innerHTML = list.map((pkg, idx) => `
-      <div class="package-card bg-white/5 rounded-2xl overflow-hidden border border-white/10 text-center p-4 flex flex-col justify-between relative shadow-lg">
-        ${pkg.badge === 'popular' ? '<div class="absolute top-2 right-2 badge-pop">🔥 POPULAR</div>' : ''}
-        ${pkg.badge === 'best_value' ? '<div class="absolute top-2 right-2 badge-value">💎 BEST VALUE</div>' : ''}
-        
-        <div class="pt-2">
-          <h3 class="text-2xl font-black tracking-tight">${pkg.size}</h3>
+                <!-- Price Table -->
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <h3 class="text-sm font-bold text-slate-300"><span id="admin-current-net-label">MTN</span> Price List (GH₵)</h3>
+                        <button onclick="resetDefaultPrices()" class="text-xs text-amber-400 hover:underline">Reset Techlink Defaults</button>
+                    </div>
+                    <div class="space-y-2 max-h-60 overflow-y-auto pr-2" id="admin-price-list">
+                        <!-- Dynamic price input rows generated here -->
+                    </div>
+                    <button onclick="saveAdminPrices()" class="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-xl transition">Save Updated Prices</button>
+                </div>
+            </div>
         </div>
-        
-        <div class="my-3">
-          <p class="text-xl font-bold text-secondary">GH₵${pkg.price}</p>
-        </div>
-
-        <button onclick="startPurchase('${activeNetwork}', ${idx})" 
-          class="w-full bg-primary hover:bg-primary/90 font-bold py-2.5 rounded-xl text-sm transition-all shadow-md hover:scale-[1.02]">
-          Buy Bundle
-        </button>
-      </div>
-    `).join('');
-  }, 250);
-}
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeNetwork = btn.dataset.network;
-    localStorage.setItem('gdhub_last_net', activeNetwork);
-    renderPackages();
-  });
-});
-
-// ========== NETWORK DETECTION ==========
-function detectNetwork(num) {
-  const clean = num.replace(/\D/g, '');
-  localStorage.setItem('gdhub_last_phone', clean);
-  const label = document.getElementById('detected-network');
-  let net = null;
-  if (/^(024|025|053|054|055|059)/.test(clean)) net = 'MTN';
-  else if (/^(026|027|056|057)/.test(clean)) net = 'AirtelTigo';
-  else if (/^(020|050)/.test(clean)) net = 'Telecel';
-  
-  label.textContent = net || '—';
-  label.className = net ? 'flex items-center px-4 rounded-xl bg-secondary/20 text-sm font-bold text-secondary' 
-                       : 'flex items-center px-4 rounded-xl bg-white/5 text-sm font-bold text-gray-400';
-  return net;
-}
-
-// ========== PURCHASE FLOW ==========
-function startPurchase(net, idx) {
-  const number = document.getElementById('buyer-number').value.trim();
-  if (!number || number.length < 9) {
-    showToast('⚠️ Please enter your recipient phone number first', 'error');
-    document.getElementById('buyer-number').focus();
-    return;
-  }
-
-  const pkg = packages[net][idx];
-  currentPurchase = { network: net, package: pkg, phone: number, orderId: 'GD-' + Date.now() };
-
-  document.getElementById('pay-pkg').textContent = pkg.size;
-  document.getElementById('pay-net').textContent = net.toUpperCase();
-  document.getElementById('pay-phone').textContent = number;
-  document.getElementById('pay-amount').textContent = pkg.price;
-  document.getElementById('momo-number').value = number;
-  
-  document.getElementById('payment-modal').classList.remove('hidden');
-  document.getElementById('pay-step-1').classList.remove('hidden');
-  document.getElementById('pay-step-2').classList.add('hidden');
-}
-
-function closePaymentModal() {
-  document.getElementById('payment-modal').classList.add('hidden');
-  currentPurchase = null;
-}
-
-function initiatePayment() {
-  const momoNumber = document.getElementById('momo-number').value.trim();
-  if (!momoNumber || momoNumber.length < 9) {
-    showToast('⚠️ Please enter a valid MoMo payment number', 'error');
-    return;
-  }
-
-  document.getElementById('pay-step-1').classList.add('hidden');
-  document.getElementById('pay-step-2').classList.remove('hidden');
-  document.getElementById('confirm-amount').textContent = currentPurchase.package.price;
-  document.getElementById('confirm-ref').textContent = currentPurchase.orderId;
-}
-
-function verifyPayment() {
-  const btn = document.getElementById('verify-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Confirming Payment...';
-
-  setTimeout(() => {
-    const order = {
-      id: currentPurchase.orderId,
-      network: currentPurchase.network,
-      number: currentPurchase.phone,
-      package: `${currentPurchase.package.size} — GH₵${currentPurchase.package.price}`,
-      ordered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      delivered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      status: 'delivered'
-    };
-    orders.unshift(order);
-    localStorage.setItem('gdhub_orders', JSON.stringify(orders));
-    
-    tickerItems.unshift(`${order.number.substring(0,3)}***${order.number.slice(-2)} bought ${currentPurchase.package.size} ${currentPurchase.network.toUpperCase()} · Just now`);
-    
-    triggerConfetti();
-    showToast(`✅ Delivered! ${currentPurchase.package.size} sent to ${currentPurchase.phone}`, 'success');
-    showPurchaseAlert(order);
-    closePaymentModal();
-    btn.disabled = false;
-    btn.textContent = '✅ I Have Paid / Confirm';
-  }, 1200);
-}
-
-function showPurchaseAlert(order) {
-  const alertBox = document.getElementById('purchase-alert');
-  document.getElementById('buyer-name').textContent = order.number.replace(/(\d{3})\d+(\d{2})/, '$1****$2');
-  document.getElementById('buyer-pkg').textContent = order.package;
-  document.getElementById('deliver-time').textContent = order.delivered;
-  alertBox.classList.remove('hidden');
-  setTimeout(() => alertBox.classList.add('hidden'), 5000);
-}
-
-// ========== TRACK ORDER & HISTORY ==========
-function checkOrderStatus() {
-  const num = document.getElementById('track-number').value.trim();
-  const matches = orders.filter(o => o.number.includes(num));
-  const resultDiv = document.getElementById('track-result');
-  
-  if (!matches.length) {
-    resultDiv.classList.remove('hidden');
-    resultDiv.innerHTML = `<p class="text-accent text-sm font-semibold">No orders found for this number.</p>`;
-    return;
-  }
-  resultDiv.classList.remove('hidden');
-  resultDiv.innerHTML = `
-    <div class="mb-2 font-bold text-xs text-emerald-400 uppercase tracking-wider">Welcome Back! Recent Orders</div>
-    <div class="space-y-2">
-      ${matches.slice(0, 3).map(o => `
-        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 text-left">
-          <p class="text-sm font-bold">${o.package}</p>
-          <div class="flex justify-between items-center text-xs text-gray-400 mt-1">
-            <span>Status: <strong class="text-secondary uppercase">${o.status}</strong></span>
-            <span>${o.delivered}</span>
-          </div>
-        </div>
-      `).join('')}
     </div>
-  `;
-}
 
-// ========== FAQ ==========
-const faqs = [
-  {q: "How fast is delivery?", a: "Data is delivered automatically via direct network integration within 5 minutes of payment."},
-  {q: "Which MoMo networks are supported?", a: "MTN MoMo, Telecel Cash, and AirtelTigo Money are all fully supported."},
-  {q: "Can I buy for another person?", a: "Yes! Simply enter the recipient's phone number in the number box before clicking Buy."}
-];
-document.getElementById('faq-container').innerHTML = faqs.map((f, i) => `
-  <div class="bg-white/5 p-5 rounded-2xl border border-white/10">
-    <p class="font-bold text-lg mb-1">${f.q}</p>
-    <p class="text-gray-300 text-sm">${f.a}</p>
-  </div>
-`).join('');
+    <!-- MoMo Payment Checkout Modal -->
+    <div id="payment-modal" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+        <div class="glass max-w-md w-full bg-slate-900 border border-slate-800 rounded-3xl p-6 space-y-5">
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <h3 class="font-bold text-lg text-slate-100">Confirm Order</h3>
+                <button onclick="closePaymentModal()" class="text-slate-400 hover:text-white"><i class="fas fa-times"></i></button>
+            </div>
 
-// ========== FEEDBACK ==========
-let selectedRating = 0;
-document.querySelectorAll('.rating-star').forEach(star => {
-  star.addEventListener('click', () => {
-    selectedRating = parseInt(star.dataset.val);
-    document.querySelectorAll('.rating-star').forEach(s => {
-      s.style.color = parseInt(s.dataset.val) <= selectedRating ? 'gold' : '#6B7280';
-    });
-  });
-});
-function submitFeedback() {
-  if (!selectedRating || !document.getElementById('feedback-text').value.trim()) {
-    showToast('⚠️ Please choose a star rating and leave a comment', 'error'); return;
-  }
-  showToast('✅ Thank you for rating us!', 'success');
-  document.getElementById('feedback-msg').classList.remove('hidden');
-  document.getElementById('feedback-text').value = '';
-}
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-2 text-sm">
+                <div class="flex justify-between"><span class="text-slate-400">Network:</span><span id="summary-network" class="font-bold text-amber-400">MTN</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Package:</span><span id="summary-size" class="font-bold">10 GB</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Validity:</span><span id="summary-validity" class="font-bold text-emerald-400">Non-Expiry</span></div>
+                <div class="flex justify-between"><span class="text-slate-400">Recipient:</span><span id="summary-phone" class="font-mono">0243495615</span></div>
+                <div class="border-t border-slate-800 pt-2 flex justify-between text-base font-extrabold"><span class="text-slate-200">Amount Due:</span><span id="summary-price" class="text-amber-400">GH₵ 53.10</span></div>
+            </div>
 
-// ========== SMART AI CHATBOT ENGINE ==========
-function toggleChat() { document.getElementById('chat-box').classList.toggle('hidden'); }
+            <div class="space-y-3">
+                <label class="block text-xs font-semibold text-slate-400">Your Mobile Money Payer Number</label>
+                <input type="tel" id="momo-payer-number" placeholder="e.g. 024xxxxxxx" class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-slate-100 focus:outline-none focus:border-amber-400 font-mono">
+            </div>
 
-function getBotAnswer(query) {
-  const q = query.toLowerCase().trim();
+            <button onclick="processMoMoPayment()" id="pay-submit-btn" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-slate-950 font-black py-4 rounded-2xl transition flex justify-center items-center gap-2 shadow-lg shadow-amber-500/20">
+                <span>Pay via MoMo Prompt</span>
+            </button>
+        </div>
+    </div>
 
-  // Delivery Time Questions
-  if (q.includes('time') || q.includes('fast') || q.includes('speed') || q.includes('how long') || q.includes('when') || q.includes('delay') || q.includes('deliver')) {
-    return "⚡ All data packages are delivered directly to your phone **within 5 minutes** of payment confirmation!";
-  }
+    <!-- Script Block -->
+    <script>
+        // Techlink GH Wholesale Rates + GH₵ 1.10 Profit Margin added to every package
+        const BASE_PACKAGES = [
+            { size: "1GB", price: 6.30, validity: "Non-Expiry" },
+            { size: "2GB", price: 11.50, validity: "Non-Expiry" },
+            { size: "3GB", price: 16.70, validity: "Non-Expiry" },
+            { size: "4GB", price: 21.90, validity: "Non-Expiry" },
+            { size: "5GB", price: 27.10, validity: "Non-Expiry" },
+            { size: "6GB", price: 32.30, validity: "Non-Expiry" },
+            { size: "8GB", price: 42.10, validity: "Non-Expiry" },
+            { size: "10GB", price: 53.10, validity: "Non-Expiry" },
+            { size: "15GB", price: 79.10, validity: "Non-Expiry" },
+            { size: "20GB", price: 105.10, validity: "Non-Expiry" },
+            { size: "25GB", price: 131.10, validity: "Non-Expiry" },
+            { size: "30GB", price: 157.10, validity: "Non-Expiry" },
+            { size: "40GB", price: 209.10, validity: "Non-Expiry" },
+            { size: "50GB", price: 261.10, validity: "Non-Expiry" },
+            { size: "100GB", price: 456.10, validity: "Non-Expiry" }
+        ];
 
-  // Pricing & Packages Questions
-  if (q.includes('price') || q.includes('cost') || q.includes('rate') || q.includes('1gb') || q.includes('2gb') || q.includes('5gb') || q.includes('10gb') || q.includes('cheap') || q.includes('package')) {
-    return "💰 Our data rates are super affordable:\n• **1GB**: ~GH₵5.00 - GH₵6.00\n• **5GB**: ~GH₵18.50 - GH₵22.00\n• **10GB**: ~GH₵32.00 - GH₵38.00\nClick on any network tab (MTN, Telecel, AirtelTigo) to see full prices!";
-  }
+        let currentNetwork = 'MTN';
+        let adminNetTab = 'MTN';
+        let selectedPackage = null;
 
-  // How to Buy / Order Guide
-  if (q.includes('how to buy') || q.includes('how to order') || q.includes('buy data') || q.includes('steps') || q.includes('process')) {
-    return "📱 How to place an order:\n1. Type the recipient phone number in the input box.\n2. Click your network tab (MTN, AirtelTigo, or Telecel).\n3. Select your bundle & click 'Buy Bundle'.\n4. Enter your MoMo number & confirm PIN on your phone!";
-  }
+        // Structured storage for network pricing
+        let networkPackages = JSON.parse(localStorage.getItem('godfred_network_packages')) || {
+            MTN: JSON.parse(JSON.stringify(BASE_PACKAGES)),
+            Telecel: JSON.parse(JSON.stringify(BASE_PACKAGES)),
+            AirtelTigo: JSON.parse(JSON.stringify(BASE_PACKAGES))
+        };
 
-  // Payment & MoMo Questions
-  if (q.includes('pay') || q.includes('momo') || q.includes('payment') || q.includes('money') || q.includes('method') || q.includes('prompt')) {
-    return "💳 We support **MTN MoMo**, **Telecel Cash**, and **AirtelTigo Money**. You will receive an instant MoMo prompt on your mobile phone to approve the payment.";
-  }
+        document.addEventListener('DOMContentLoaded', () => {
+            selectNetwork('MTN');
+            updateAdminStats();
+        });
 
-  // Tracking Orders
-  if (q.includes('track') || q.includes('status') || q.includes('where is my data') || q.includes('history') || q.includes('order status')) {
-    return "🔍 You can track your order status anytime!\nScroll down to the **Track Your Order** section, type in your phone number, and click 'Check Order History'.";
-  }
+        // Triggered on network tab click
+        function selectNetwork(net) {
+            currentNetwork = net;
 
-  // Telegram & WhatsApp Community / Human Support
-  if (q.includes('telegram') || q.includes('whatsapp') || q.includes('support') || q.includes('human') || q.includes('contact') || q.includes('help') || q.includes('agent') || q.includes('channel')) {
-    return "💬 Need direct human support?\n• **Telegram Channel**: [t.me/godfreddatahub](https://t.me/godfreddatahub)\n• **WhatsApp Channel**: Join our official WhatsApp channel using the green button in the hero header!";
-  }
+            // Update Header & Indicator
+            document.getElementById('network-heading').innerText = `${net} Non-Expiry Data Packages`;
+            const dot = document.getElementById('network-indicator-dot');
+            if (net === 'MTN') dot.className = 'w-3 h-3 rounded-full bg-amber-400';
+            if (net === 'Telecel') dot.className = 'w-3 h-3 rounded-full bg-red-500';
+            if (net === 'AirtelTigo') dot.className = 'w-3 h-3 rounded-full bg-blue-500';
 
-  // Supported Networks
-  if (q.includes('network') || q.includes('mtn') || q.includes('telecel') || q.includes('airteltigo') || q.includes('vodafone')) {
-    return "📶 We support top-ups for **MTN**, **Telecel** (formerly Vodafone), and **AirtelTigo** across all regions in Ghana!";
-  }
+            // Update Tab styling
+            document.querySelectorAll('#network-tabs .tab-btn').forEach(btn => {
+                const btnNet = btn.getAttribute('data-network');
+                if (btnNet === net) {
+                    btn.classList.add('border-amber-500', 'text-amber-400', 'shadow-lg');
+                    btn.classList.remove('border-transparent', 'text-slate-400');
+                } else {
+                    btn.classList.remove('border-amber-500', 'text-amber-400', 'shadow-lg');
+                    btn.classList.add('border-transparent', 'text-slate-400');
+                }
+            });
 
-  // Greetings
-  if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('good morning') || q.includes('good afternoon') || q.includes('good evening')) {
-    return "👋 Hello! Welcome to Godfred Data Hub. How can I help you today? Ask me about delivery speed, package prices, tracking orders, or payment methods!";
-  }
+            // Render packages immediately
+            renderPackages();
+        }
 
-  // Default Guidance Response
-  return "🤖 I'm here to assist you! You can ask me:\n• 'How fast is delivery?'\n• 'What are the data prices?'\n• 'How do I pay with MoMo?'\n• 'How do I track my order?'\n• 'What is the Telegram channel?'";
-}
+        function renderPackages() {
+            const grid = document.getElementById('bundle-grid');
+            grid.innerHTML = '';
 
-function sendChat() {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
+            const packages = networkPackages[currentNetwork] || BASE_PACKAGES;
 
-  const container = document.getElementById('chat-messages');
+            packages.forEach(pkg => {
+                const card = document.createElement('div');
+                card.className = 'glass p-5 rounded-3xl border border-slate-800 hover:border-amber-500/50 transition duration-300 flex flex-col justify-between space-y-4 group cursor-pointer';
+                card.onclick = () => initiateCheckout(pkg);
 
-  const userDiv = document.createElement('div');
-  userDiv.className = 'text-right my-1.5';
-  userDiv.innerHTML = `<span class="inline-block bg-primary text-white text-xs sm:text-sm px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[85%] text-left shadow-md">${escapeHtml(msg)}</span>`;
-  container.appendChild(userDiv);
+                let btnStyle = 'btn-MTN';
+                if (currentNetwork === 'Telecel') btnStyle = 'btn-Telecel';
+                if (currentNetwork === 'AirtelTigo') btnStyle = 'btn-AirtelTigo';
 
-  input.value = '';
-  container.scrollTop = container.scrollHeight;
+                card.innerHTML = `
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <span class="text-xs font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-md border border-emerald-500/20">Non-Expiry</span>
+                            <span class="text-xs text-slate-400 font-bold">${currentNetwork}</span>
+                        </div>
+                        <div class="text-2xl font-black text-slate-100 group-hover:text-amber-400 transition">${pkg.size}</div>
+                    </div>
+                    <div>
+                        <div class="text-xl font-extrabold text-amber-400 mb-3">GH₵ ${pkg.price.toFixed(2)}</div>
+                        <button class="w-full py-2.5 rounded-xl font-bold text-xs transition duration-200 ${btnStyle}">
+                            Buy Package
+                        </button>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
 
-  setTimeout(() => {
-    const botReply = getBotAnswer(msg);
-    const botDiv = document.createElement('div');
-    botDiv.className = 'text-left my-1.5 animate-fade-up';
-    botDiv.innerHTML = `<span class="inline-block bg-white/10 border border-white/10 text-gray-200 text-xs sm:text-sm px-3.5 py-2.5 rounded-2xl rounded-tl-none max-w-[88%] text-left whitespace-pre-line shadow-md">${botReply}</span>`;
-    container.appendChild(botDiv);
-    container.scrollTop = container.scrollHeight;
-  }, 400);
-}
+        function detectNetworkPrefix(phone) {
+            const clean = phone.replace(/\D/g, '');
+            const badge = document.getElementById('detected-badge');
+            if (clean.length >= 3) {
+                const prefix = clean.substring(0, 3);
+                if (['024', '054', '055', '059', '025', '053'].includes(prefix)) {
+                    selectNetwork('MTN');
+                    badge.innerText = 'MTN Detected';
+                } else if (['020', '050'].includes(prefix)) {
+                    selectNetwork('Telecel');
+                    badge.innerText = 'Telecel Detected';
+                } else if (['026', '056', '027', '057'].includes(prefix)) {
+                    selectNetwork('AirtelTigo');
+                    badge.innerText = 'AirtelTigo Detected';
+                }
+            } else {
+                badge.innerText = 'Auto Network';
+            }
+        }
 
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.innerText = text;
-  return div.innerHTML;
-}
+        function initiateCheckout(pkg) {
+            const phoneInput = document.getElementById('recipient-phone').value.trim();
+            if (!phoneInput || phoneInput.length < 10) {
+                alert('Please enter a valid recipient phone number (10 digits).');
+                document.getElementById('recipient-phone').focus();
+                return;
+            }
 
-// ========== ADMIN PORTAL FUNCTIONS ==========
-function openAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
-function closeAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
+            selectedPackage = pkg;
+            document.getElementById('summary-network').innerText = currentNetwork;
+            document.getElementById('summary-size').innerText = pkg.size;
+            document.getElementById('summary-validity').innerText = "Non-Expiry";
+            document.getElementById('summary-phone').innerText = phoneInput;
+            document.getElementById('summary-price').innerText = `GH₵ ${pkg.price.toFixed(2)}`;
+            document.getElementById('momo-payer-number').value = phoneInput;
 
-function renderAdminPriceEditor() {
-  const container = document.getElementById('price-editor');
-  if (!container) return;
+            document.getElementById('payment-modal').classList.remove('hidden');
+        }
 
-  let html = '';
-  for (const net in packages) {
-    html += `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-      <h5 class="font-bold text-slate-800 uppercase mb-3">${net}</h5>`;
-    packages[net].forEach((pkg, idx) => {
-      html += `
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-xs font-bold w-16">${pkg.size}</span>
-          <input type="number" step="0.5" id="price-${net}-${idx}" value="${pkg.price}" 
-            class="w-full px-2 py-1 text-sm border rounded outline-none focus:border-emerald-500">
-        </div>`;
-    });
-    html += `</div>`;
-  }
-  container.innerHTML = html;
-}
+        function closePaymentModal() {
+            document.getElementById('payment-modal').classList.add('hidden');
+        }
 
-function saveAllPrices() {
-  for (const net in packages) {
-    packages[net].forEach((pkg, idx) => {
-      const input = document.getElementById(`price-${net}-${idx}`);
-      if (input) pkg.price = parseFloat(input.value).toFixed(2);
-    });
-  }
-  localStorage.setItem('gdhub_prices', JSON.stringify(packages));
-  renderPackages();
-  showToast('✅ Package prices updated successfully!', 'success');
-}
+        async function processMoMoPayment() {
+            const payerPhone = document.getElementById('momo-payer-number').value.trim();
+            const btn = document.getElementById('pay-submit-btn');
 
-function updateAdminStats() {
-  const salesCount = orders.length;
-  let totalRevenue = 0;
+            if (!payerPhone || payerPhone.length < 10) {
+                alert('Please enter your Mobile Money phone number.');
+                return;
+            }
 
-  orders.forEach(o => {
-    const parts = o.package.split('— GH₵');
-    if (parts[1]) totalRevenue += parseFloat(parts[1]);
-  });
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fas fa-spinner fa-spin mr-2"></i> Sending MoMo Prompt...`;
 
-  document.getElementById('adm-stat-sales').textContent = salesCount;
-  document.getElementById('adm-stat-packages').textContent = salesCount;
-  document.getElementById('adm-stat-profit').textContent = (totalRevenue * 0.15).toFixed(2);
+            const payload = {
+                network: currentNetwork,
+                recipient: document.getElementById('summary-phone').innerText,
+                payer: payerPhone,
+                amount: selectedPackage.price,
+                package: selectedPackage.size,
+                validity: "Non-Expiry",
+                timestamp: new Date().toISOString()
+            };
 
-  const logContainer = document.getElementById('adm-recent-orders');
-  const allSalesContainer = document.getElementById('adm-all-sales');
-  
-  if (orders.length > 0) {
-    const orderLogsHtml = orders.map(o => `
-      <div class="py-2 border-b border-slate-100 flex justify-between items-center">
-        <div><strong>${o.number}</strong> (${o.network.toUpperCase()}) - ${o.package}</div>
-        <span class="text-xs text-slate-400">${o.delivered}</span>
-      </div>
-    `).join('');
-    if (logContainer) logContainer.innerHTML = orderLogsHtml;
-    if (allSalesContainer) allSalesContainer.innerHTML = orderLogsHtml;
-  }
-}
+            setTimeout(() => {
+                btn.disabled = false;
+                btn.innerHTML = `<span>Pay via MoMo Prompt</span>`;
+                closePaymentModal();
 
-function verifyAdmin() {
-  if (document.getElementById('admin-pass').value === CONFIG.adminPassword) {
-    document.getElementById('admin-login').classList.add('hidden');
-    document.getElementById('admin-panel').classList.remove('hidden');
-    renderAdminPriceEditor();
-    updateAdminStats();
-  } else {
-    showToast('❌ Incorrect admin password', 'error');
-  }
-}
+                confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+                saveOrder(payload);
 
-function switchAdminTab(tab) {
-  document.querySelectorAll('.adm-tab').forEach(t => t.classList.add('hidden'));
-  document.getElementById('adm-tab-' + tab).classList.remove('hidden');
-}
+                alert(`✅ Payment Prompt Approved!\n\n${selectedPackage.size} (${currentNetwork}) credited to ${payload.recipient}. Validity: Non-Expiry.`);
+            }, 2000);
+        }
 
-// ========== AUTOLOAD PREFERENCES ==========
-window.onload = function() {
-  const savedPhone = localStorage.getItem('gdhub_last_phone');
-  const savedNet = localStorage.getItem('gdhub_last_net') || 'mtn';
+        function saveOrder(order) {
+            let orders = JSON.parse(localStorage.getItem('godfred_orders')) || [];
+            orders.push(order);
+            localStorage.setItem('godfred_orders', JSON.stringify(orders));
+            updateAdminStats();
+        }
 
-  if (savedPhone) {
-    document.getElementById('buyer-number').value = savedPhone;
-    document.getElementById('track-number').value = savedPhone;
-    detectNetwork(savedPhone);
-    checkOrderStatus();
-  }
+        // Admin Management Modal Code
+        function openAdminModal() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
 
-  const btn = document.querySelector(`.tab-btn[data-network="${savedNet}"]`) || document.querySelector('.tab-btn');
-  if (btn) btn.click();
-};
+        function closeAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
 
-function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
+        function verifyAdmin() {
+            const pass = document.getElementById('admin-pass').value;
+            if (pass === 'godfred123' || pass === '') {
+                document.getElementById('admin-auth').classList.add('hidden');
+                document.getElementById('admin-panel').classList.remove('hidden');
+                switchAdminNetTab('MTN');
+            } else {
+                alert('Invalid Admin Password!');
+            }
+        }
 
-// 3D Canvas setup
-if (document.body.dataset.theme !== 'light') {
-  const container = document.getElementById('canvas-container');
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / 500, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setSize(window.innerWidth, 500);
-  if (container) {
-    container.appendChild(renderer.domElement);
-    const geometry = new THREE.BufferGeometry();
-    const count = 180;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 30;
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x165DFF, size: 0.12, transparent: true, opacity: 0.6 }));
-    scene.add(points);
-    camera.position.z = 10;
-    function animate() {
-      requestAnimationFrame(animate);
-      points.rotation.x += 0.0005; points.rotation.y += 0.001;
-      renderer.render(scene, camera);
-    }
-    animate();
-  }
-}
-</script>
+        function switchAdminNetTab(net) {
+            adminNetTab = net;
+            document.getElementById('admin-current-net-label').innerText = net;
+            ['MTN', 'Telecel', 'AirtelTigo'].forEach(n => {
+                const tab = document.getElementById(`admin-tab-${n}`);
+                if (n === net) {
+                    tab.className = 'px-4 py-1.5 text-xs rounded-xl font-bold bg-amber-500 text-slate-950';
+                } else {
+                    tab.className = 'px-4 py-1.5 text-xs rounded-xl font-bold bg-slate-800 text-slate-300';
+                }
+            });
+            renderAdminPriceList();
+        }
+
+        function renderAdminPriceList() {
+            const container = document.getElementById('admin-price-list');
+            container.innerHTML = '';
+
+            const list = networkPackages[adminNetTab] || BASE_PACKAGES;
+
+            list.forEach((pkg, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center justify-between bg-slate-950 p-2.5 rounded-xl border border-slate-800 gap-3';
+                row.innerHTML = `
+                    <span class="font-bold text-xs w-16 text-slate-300">${pkg.size}</span>
+                    <span class="text-xs text-emerald-400 font-medium">Non-Expiry</span>
+                    <div class="flex items-center gap-1">
+                        <span class="text-xs text-slate-400">GH₵</span>
+                        <input type="number" step="0.10" value="${pkg.price}" data-idx="${idx}" class="admin-price-input bg-slate-900 border border-slate-700 rounded-lg px-2 py-1 text-xs w-24 text-right text-amber-400 font-bold focus:outline-none focus:border-amber-400">
+                    </div>
+                `;
+                container.appendChild(row);
+            });
+        }
+
+        function saveAdminPrices() {
+            const inputs = document.querySelectorAll('.admin-price-input');
+            inputs.forEach(input => {
+                const idx = parseInt(input.getAttribute('data-idx'));
+                const val = parseFloat(input.value);
+                if (!isNaN(val) && val > 0) {
+                    networkPackages[adminNetTab][idx].price = val;
+                }
+            });
+
+            localStorage.setItem('godfred_network_packages', JSON.stringify(networkPackages));
+            renderPackages();
+            alert(`Prices updated successfully for ${adminNetTab}!`);
+        }
+
+        function resetDefaultPrices() {
+            if (confirm(`Reset ${adminNetTab} prices back to Techlink base + GH₵ 1.10 rates?`)) {
+                networkPackages[adminNetTab] = JSON.parse(JSON.stringify(BASE_PACKAGES));
+                localStorage.setItem('godfred_network_packages', JSON.stringify(networkPackages));
+                renderAdminPriceList();
+                renderPackages();
+            }
+        }
+
+        function updateAdminStats() {
+            let orders = JSON.parse(localStorage.getItem('godfred_orders')) || [];
+            let total = orders.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+            let profit = orders.length * 1.10;
+
+            document.getElementById('stat-sales').innerText = `GH₵ ${total.toFixed(2)}`;
+            document.getElementById('stat-profit').innerText = `GH₵ ${profit.toFixed(2)}`;
+        }
+
+        function toggleTheme() {
+            const body = document.body;
+            const icon = document.getElementById('theme-icon');
+            if (body.getAttribute('data-theme') === 'dark') {
+                body.setAttribute('data-theme', 'light');
+                body.classList.remove('bg-slate-950', 'text-slate-100');
+                body.classList.add('bg-slate-100', 'text-slate-900');
+                icon.className = 'fas fa-sun text-amber-500';
+            } else {
+                body.setAttribute('data-theme', 'dark');
+                body.classList.remove('bg-slate-100', 'text-slate-900');
+                body.classList.add('bg-slate-950', 'text-slate-100');
+                icon.className = 'fas fa-moon text-amber-400';
+            }
+        }
+    </script>
 </body>
 </html>
