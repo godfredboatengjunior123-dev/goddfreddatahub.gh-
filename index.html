@@ -795,9 +795,6 @@ function startPurchase(net, idx) {
   document.getElementById('pay-phone').textContent = number;
   document.getElementById('pay-amount').textContent = pkg.price;
   document.getElementById('momo-number').value = number;
-
-  const momoRadio = document.querySelector(`input[name="momo-method"][value="${net}"]`);
-  if (momoRadio) momoRadio.checked = true;
   
   document.getElementById('payment-modal').classList.remove('hidden');
   document.getElementById('pay-step-1').classList.remove('hidden');
@@ -845,8 +842,6 @@ function verifyPayment() {
     triggerConfetti();
     showToast(`✅ Delivered! ${currentPurchase.package.size} sent to ${currentPurchase.phone}`, 'success');
     showPurchaseAlert(order);
-    checkOrderStatus();
-    updateAdminStats();
     closePaymentModal();
     btn.disabled = false;
     btn.textContent = '✅ I Have Paid / Confirm';
@@ -1105,13 +1100,12 @@ function toggleMobileMenu() { document.getElementById('mobile-menu').classList.t
 // 3D Canvas setup
 if (document.body.dataset.theme !== 'light') {
   const container = document.getElementById('canvas-container');
+  const scene = new THREE.Scene();
+  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / 500, 0.1, 1000);
+  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+  renderer.setSize(window.innerWidth, 500);
   if (container) {
-    const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / 500, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    renderer.setSize(window.innerWidth, 500);
     container.appendChild(renderer.domElement);
-    
     const geometry = new THREE.BufferGeometry();
     const count = 180;
     const positions = new Float32Array(count * 3);
@@ -1120,22 +1114,14 @@ if (document.body.dataset.theme !== 'light') {
     const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x165DFF, size: 0.12, transparent: true, opacity: 0.6 }));
     scene.add(points);
     camera.position.z = 10;
-
     function animate() {
       requestAnimationFrame(animate);
-      points.rotation.x += 0.0005; 
-      points.rotation.y += 0.001;
+      points.rotation.x += 0.0005; points.rotation.y += 0.001;
       renderer.render(scene, camera);
     }
     animate();
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / 500;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, 500);
-    });
   }
 }
 </script>
 </body>
-</html>
+</html>   
