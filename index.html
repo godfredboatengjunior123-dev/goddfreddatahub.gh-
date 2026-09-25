@@ -417,10 +417,17 @@ tailwind.config = {
 <footer class="border-t border-white/10 py-8 px-4 text-center text-sm text-gray-400">
   <p class="mb-2">© 2026 Godfred Data Hub. All rights reserved.</p>
   <p class="mb-3">MTN • AirtelTigo • Telecel — Automated MoMo Delivery</p>
-  <div class="flex justify-center gap-4 text-xs font-semibold">
+  <div class="flex justify-center flex-wrap gap-4 text-xs font-semibold mb-4">
     <a href="https://whatsapp.com/channel/0029VbEYidXGpLHS9AxCAO2D" target="_blank" class="text-green-400 hover:underline">WhatsApp Hub</a>
     <span>•</span>
     <a href="https://t.me/godfreddatahub" target="_blank" class="text-sky-400 hover:underline">Telegram Channel</a>
+  </div>
+  <div class="flex justify-center flex-wrap gap-4 text-xs text-gray-400">
+    <button onclick="openPolicyModal('terms')" class="hover:text-white hover:underline transition-colors">Terms of Service</button>
+    <span>•</span>
+    <button onclick="openPolicyModal('refund')" class="hover:text-white hover:underline transition-colors">Refund & Cancellation Policy</button>
+    <span>•</span>
+    <button onclick="openPolicyModal('privacy')" class="hover:text-white hover:underline transition-colors">Privacy Policy</button>
   </div>
 </footer>
 
@@ -447,6 +454,17 @@ tailwind.config = {
         onkeydown="if(event.key==='Enter')sendChat()">
       <button onclick="sendChat()" class="bg-primary px-3.5 rounded-xl hover:bg-primary/90 font-bold text-white">➤</button>
     </div>
+  </div>
+</div>
+
+<!-- Legal Policy Modal -->
+<div id="policy-modal" class="hidden modal-backdrop">
+  <div class="bg-dark border border-white/10 rounded-2xl max-w-2xl w-full p-6 animate-fade-scale shadow-2xl max-h-[85vh] flex flex-col">
+    <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
+      <h3 id="policy-title" class="text-xl font-bold text-white"></h3>
+      <button onclick="closePolicyModal()" class="text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
+    </div>
+    <div id="policy-content" class="overflow-y-auto text-sm text-gray-300 space-y-4 pr-2 leading-relaxed"></div>
   </div>
 </div>
 
@@ -579,7 +597,7 @@ const CONFIG = {
   momoApiUrl: "https://api.techlink.com.gh/v1/payment/charge"
 };
 
-// ========== DEFAULT PACKAGES (CLEANED - NO VALIDITY PROPERTIES) ==========
+// ========== DEFAULT PACKAGES ==========
 const defaultPackages = {
   mtn: [
     {size: "100MB", price: "1.00", cost: "0.70"},
@@ -620,6 +638,84 @@ let packages = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPack
 let activeNetwork = null;
 let orders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
 let currentPurchase = null;
+
+// ========== LEGAL POLICY MODAL FUNCTIONS ==========
+function openPolicyModal(type) {
+  const modal = document.getElementById('policy-modal');
+  const title = document.getElementById('policy-title');
+  const content = document.getElementById('policy-content');
+  
+  if (type === 'terms') {
+    title.innerText = '📜 Terms of Service';
+    content.innerHTML = `
+      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">1. Overview</h4>
+      <p>Godfred Data Hub provides instant internet data bundle top-up services for major mobile networks in Ghana, including MTN, Telecel, and AirtelTigo. By placing an order on our platform, you agree to these Terms of Service.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">2. Service Delivery & Fulfillment</h4>
+      <p>Data top-ups are processed automatically upon successful payment confirmation through Mobile Money. Deliveries typically take between a few seconds and 15 minutes. During peak times or network operator maintenance, delivery may experience minor delays.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">3. User Responsibilities</h4>
+      <p>You are solely responsible for providing the correct recipient mobile phone number and selecting the corresponding network provider. Godfred Data Hub is not responsible for failed top-ups or data sent to wrong numbers due to customer entry error.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">4. Pricing & Payments</h4>
+      <p>All prices are listed in Ghana Cedi (GH₵) and include applicable processing fees. Prices are subject to change without prior notice based on telecom operator tariff adjustments.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">5. Limitation of Liability</h4>
+      <p>Godfred Data Hub is a third-party data distributor and is not responsible for network outages, signal coverage issues, or data expiration rules set by MTN, Telecel, or AirtelTigo.</p>
+    `;
+  } else if (type === 'refund') {
+    title.innerText = '🔄 Refund & Cancellation Policy';
+    content.innerHTML = `
+      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">1. Digital Goods Exemption</h4>
+      <p>Due to the instant digital nature of mobile data top-ups, all successful top-up transactions are final and non-reversible once delivered to the specified phone number.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">2. Eligible Refund Conditions</h4>
+      <p>You are entitled to a full refund under the following circumstances:</p>
+      <ul class="list-disc pl-5 space-y-1 my-2">
+        <li><strong>Unfulfilled Orders:</strong> Payment was deducted from your account, but the data bundle was not delivered within 24 hours due to a system error.</li>
+        <li><strong>Duplicate Payments:</strong> You were charged twice for a single order due to a payment processing error.</li>
+      </ul>
+      
+      <h4 class="font-bold text-white text-base mt-3">3. Non-Refundable Scenarios</h4>
+      <p>Refunds will not be issued if an incorrect phone number was provided during checkout and the data was successfully credited to that number, or if the wrong network provider was selected.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">4. How to Request a Refund</h4>
+      <p>To request a refund, contact our support team via our official WhatsApp Channel or Telegram group with your phone number, payment reference, and transaction date. Verified refunds will be credited back to your original Mobile Money account within 24 to 48 hours.</p>
+    `;
+  } else if (type === 'privacy') {
+    title.innerText = '🔒 Privacy Policy';
+    content.innerHTML = `
+      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">1. Information We Collect</h4>
+      <p>To process and deliver your data orders, we collect minimal necessary information, including:</p>
+      <ul class="list-disc pl-5 space-y-1 my-2">
+        <li>Recipient phone number and Mobile Money account number.</li>
+        <li>Payment reference, date, and order status.</li>
+        <li>Customer support messages and feedback ratings.</li>
+      </ul>
+      
+      <h4 class="font-bold text-white text-base mt-3">2. How We Use Your Information</h4>
+      <p>Your information is used strictly to deliver data top-ups to your designated phone number, process secure payments via Paystack/MoMo, verify transaction logs, and provide customer assistance.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">3. Data Security & Third-Party Sharing</h4>
+      <p>We do not sell, trade, or rent customer personal information to any third parties. All financial payments are securely processed through encrypted payment providers (Paystack). We do not store Mobile Money PINs or credit card details.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">4. Contact & Inquiries</h4>
+      <p>If you have questions regarding your data privacy or wish to request data deletion, please contact us via our WhatsApp or Telegram channels.</p>
+    `;
+  }
+  
+  modal.classList.remove('hidden');
+}
+
+function closePolicyModal() {
+  document.getElementById('policy-modal').classList.add('hidden');
+}
 
 // ========== TOAST NOTIFICATION SYSTEM ==========
 function showToast(msg, type = 'info') {
@@ -1124,4 +1220,4 @@ if (document.body.dataset.theme !== 'light') {
 }
 </script>
 </body>
-</html>   
+</html>
