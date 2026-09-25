@@ -230,7 +230,8 @@ tailwind.config = {
 <!-- Navigation -->
 <nav class="sticky top-0 z-50 bg-dark/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 animate-fade-up">
   <div class="max-w-7xl mx-auto flex justify-between items-center">
-    <a href="#" class="flex items-center gap-2">
+    <!-- Secret Method 1: Tapping 'G' logo 5 times in quick succession triggers Admin Portal -->
+    <a href="#" onclick="handleLogoClick(event)" class="flex items-center gap-2 select-none">
       <div class="w-10 h-10 rounded-full gradient-hero flex items-center justify-center font-bold text-xl animate-pulse-glow">G</div>
       <span class="font-bold text-xl logo-gradient">Godfred Data Hub</span>
     </a>
@@ -239,7 +240,6 @@ tailwind.config = {
       <a href="#track" class="hover:text-secondary transition-colors">Track Order</a>
       <a href="#faq" class="hover:text-secondary transition-colors">FAQ</a>
       <a href="#feedback" class="hover:text-secondary transition-colors">Feedback</a>
-      <button onclick="openAdmin()" class="text-accent hover:underline font-semibold">Admin</button>
     </div>
     <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
       <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
@@ -250,7 +250,6 @@ tailwind.config = {
     <a href="#track" class="block py-2 hover:text-secondary">Track Order</a>
     <a href="#faq" class="block py-2 hover:text-secondary">FAQ</a>
     <a href="#feedback" class="block py-2 hover:text-secondary">Feedback</a>
-    <button onclick="openAdmin()" class="block py-2 text-accent">Admin Login</button>
   </div>
 </nav>
 
@@ -525,7 +524,7 @@ tailwind.config = {
   </div>
 </div>
 
-<!-- Admin Portal -->
+<!-- Admin Portal (Hidden by default, opened via secret triggers) -->
 <div id="admin-modal" class="hidden modal-backdrop p-0 items-stretch justify-start z-[999]">
   <div class="flex w-full h-full bg-slate-50 text-slate-800 overflow-hidden">
     <aside class="w-64 bg-white border-r border-slate-200 p-6 flex-shrink-0 hidden sm:flex flex-col justify-between">
@@ -1094,6 +1093,34 @@ function escapeHtml(text) {
   return div.innerHTML;
 }
 
+// ========== SECRET ADMIN ACCESS HANDLERS ==========
+let logoClickCount = 0;
+let logoClickTimer = null;
+
+// Secret Method 1: Click "G" logo 5 times in quick succession
+function handleLogoClick(e) {
+  logoClickCount++;
+  clearTimeout(logoClickTimer);
+  
+  if (logoClickCount >= 5) {
+    e.preventDefault();
+    openAdmin();
+    logoClickCount = 0;
+    showToast('🔑 Secret Admin Access Triggered', 'info');
+  } else {
+    logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2000);
+  }
+}
+
+// Secret Method 2: Keyboard shortcut (Ctrl + Shift + A)
+document.addEventListener('keydown', function(e) {
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
+    e.preventDefault();
+    openAdmin();
+    showToast('🔑 Secret Admin Access Triggered', 'info');
+  }
+});
+
 // ========== ADMIN PORTAL FUNCTIONS ==========
 function openAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
 function closeAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
@@ -1175,7 +1202,7 @@ function switchAdminTab(tab) {
   document.getElementById('adm-tab-' + tab).classList.remove('hidden');
 }
 
-// ========== AUTOLOAD PREFERENCES ==========
+// ========== AUTOLOAD PREFERENCES & SECRET URL CHECK ==========
 window.onload = function() {
   const savedPhone = localStorage.getItem('gdhub_last_phone');
   const savedNet = localStorage.getItem('gdhub_last_net') || 'mtn';
@@ -1189,6 +1216,12 @@ window.onload = function() {
 
   const btn = document.querySelector(`.tab-btn[data-network="${savedNet}"]`) || document.querySelector('.tab-btn');
   if (btn) btn.click();
+
+  // Secret Method 3: Open admin via URL query parameter (?admin=true)
+  const urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('admin') === 'true') {
+    openAdmin();
+  }
 };
 
 function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
