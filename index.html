@@ -1,4 +1,218 @@
-<!DOCTYPE html>
+import express from "express";
+import crypto from "crypto";
+import fs from "fs";
+
+const app = express();
+app.use(express.json({ verify: (req, _res, buf) => { req.rawBody = buf; } }));
+app.get("/", (_req, res) => res.type("html").send(HTML));
+
+const PAYSTACK_SECRET = process.env.PAYSTACK_SECRET_KEY; // sk_live_... (NEVER put this in index.html)
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const PORT = process.env.PORT || 3000;
+
+// Paystack provider codes for Ghana mobile money
+const PROVIDERS = { mtn: "mtn", telecel: "vod", airteltigo: "atl" };
+
+// Prices live on the server so customers cannot change what they pay
+const PRICES_FILE = "prices.json";
+const DEFAULT_PRICES = {
+  "mtn": {
+    "100MB": "1.00",
+    "250MB": "2.00",
+    "500MB": "3.50",
+    "1GB": "6.00",
+    "2GB": "10.00",
+    "3GB": "14.00",
+    "5GB": "22.00",
+    "10GB": "38.00",
+    "20GB": "70.00",
+    "50GB": "150.00"
+  },
+  "airteltigo": {
+    "100MB": "0.90",
+    "500MB": "3.20",
+    "1GB": "5.50",
+    "2GB": "9.00",
+    "5GB": "20.00",
+    "10GB": "35.00",
+    "20GB": "65.00",
+    "50GB": "135.00"
+  },
+  "telecel": {
+    "100MB": "0.80",
+    "500MB": "3.00",
+    "1GB": "5.00",
+    "2GB": "8.50",
+    "5GB": "18.50",
+    "10GB": "32.00",
+    "20GB": "60.00",
+    "50GB": "125.00"
+  }
+};
+let prices = fs.existsSync(PRICES_FILE)
+  ? JSON.parse(fs.readFileSync(PRICES_FILE, "utf8"))
+  : DEFAULT_PRICES;
+
+// NOTE: in-memory. Render restarts will wipe it. Move to a database (e.g. Render Postgres) later.
+const orders = new Map();
+
+async function paystack(path, method = "GET", body) {
+  const res = await fetch("https://api.paystack.co" + path, {
+    method,
+    headers: {
+      Authorization: `Bearer ${PAYSTACK_SECRET}`,
+      "Content-Type": "application/json",
+    },
+    body: body ? JSON.stringify(body) : undefined,
+  });
+  return res.json();
+}
+
+// ---------- Fulfilment: call YOUR data provider API here ----------
+async function sendDataToCustomer(order) {
+  // TODO: replace with your real tech dashboard / API call.
+  // Example shape only — use the format your provider documents:
+  //
+  // const r = await fetch("https://api.techlink.com.gh/v1/...", {
+  //   method: "POST",
+  //   headers: { Authorization: `Bearer ${process.env.PROVIDER_API_KEY}`, "Content-Type": "application/json" },
+  //   body: JSON.stringify({ network: order.network, phone: order.recipient, size: order.size, reference: order.reference }),
+  // });
+  // if (!r.ok) throw new Error("Provider failed");
+  console.log("FULFIL ORDER:", order.reference, order.network, order.size, "->", order.recipient);
+}
+
+// Runs once per paid order (safe to call many times)
+async function fulfil(reference) {
+  const order = orders.get(reference);
+  if (!order || order.fulfilStarted) return order;
+  order.fulfilStarted = true;
+  order.paid = true;
+  try {
+    await sendDataToCustomer(order);
+    order.status = "delivered";
+  } catch (e) {
+    console.error("Fulfilment failed for", reference, e.message);
+    order.status = "paid_not_delivered"; // check these manually and refund/resend
+  }
+  return order;
+}
+
+// ---------- 1) Start MoMo charge ----------
+app.post("/api/pay", async (req, res) => {
+  try {
+    const { network, size, recipient, momoNumber, momoProvider } = req.body;
+    const price = prices[network]?.[size];
+    const provider = PROVIDERS[momoProvider];
+    if (!price || !provider || !momoNumber || !recipient) {
+      return res.status(400).json({ error: "Invalid order details" });
+    }
+
+    const reference = "GD-" + Date.now() + "-" + crypto.randomBytes(3).toString("hex");
+    const data = await paystack("/charge", "POST", {
+      email: `${momoNumber}@godfreddatahub.gh`, // Paystack needs an email; customer doesn't see it
+      amount: Math.round(parseFloat(price) * 100), // pesewas
+      currency: "GHS",
+      reference,
+      mobile_money: { phone: momoNumber, provider },
+    });
+
+    if (!data.status) {
+      return res.status(400).json({ error: data.message || "Paystack rejected the charge" });
+    }
+
+    orders.set(reference, {
+      reference, network, size, recipient, momoNumber,
+      amount: price, status: "pending", createdAt: new Date().toISOString(),
+    });
+
+    res.json({
+      reference,
+      status: data.data.status, // pay_offline | send_otp | pending | success ...
+      message: data.data.display_text || "Approve the prompt on your phone",
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: "Server error starting payment" });
+  }
+});
+
+// ---------- 2) Submit OTP / voucher (needed for Telecel, sometimes others) ----------
+app.post("/api/pay/otp", async (req, res) => {
+  const { reference, otp } = req.body;
+  const data = await paystack("/charge/submit_otp", "POST", { reference, otp });
+  if (!data.status) return res.status(400).json({ error: data.message });
+  res.json({ status: data.data.status, message: data.data.display_text || data.message });
+});
+
+// ---------- 3) Frontend polls this ----------
+app.get("/api/pay/status/:reference", async (req, res) => {
+  const { reference } = req.params;
+  const order = orders.get(reference);
+  if (!order) return res.status(404).json({ error: "Unknown reference" });
+
+  const data = await paystack(`/transaction/verify/${encodeURIComponent(reference)}`);
+  const ps = data?.data?.status; // success | failed | abandoned | pending | ongoing
+
+  if (ps === "success") {
+    // Safety: make sure the amount paid matches the price
+    if (data.data.amount < Math.round(parseFloat(order.amount) * 100)) {
+      order.status = "amount_mismatch";
+      return res.json({ status: "failed", message: "Amount mismatch" });
+    }
+    const done = await fulfil(reference);
+    return res.json({ status: "success", order: { id: done.reference, delivery: done.status } });
+  }
+  if (ps === "failed" || ps === "abandoned") {
+    order.status = "failed";
+    return res.json({ status: "failed", message: data.data.gateway_response || "Payment failed" });
+  }
+  res.json({ status: "pending" });
+});
+
+// ---------- 4) Paystack webhook (backup in case customer closes the page) ----------
+app.post("/api/paystack-webhook", async (req, res) => {
+  const hash = crypto.createHmac("sha512", PAYSTACK_SECRET).update(req.rawBody).digest("hex");
+  if (hash !== req.headers["x-paystack-signature"]) return res.sendStatus(401);
+  const event = req.body;
+  if (event.event === "charge.success") await fulfil(event.data.reference);
+  res.sendStatus(200);
+});
+
+// ---------- Prices (public read, admin write) ----------
+app.get("/api/prices", (_req, res) => res.json(prices));
+
+const isAdmin = (req) =>
+  ADMIN_PASSWORD && req.headers["x-admin-password"] === ADMIN_PASSWORD;
+
+app.post("/api/admin/login", (req, res) => {
+  if (!isAdmin(req)) return res.sendStatus(401);
+  res.json({ ok: true });
+});
+
+app.post("/api/admin/prices", (req, res) => {
+  if (!isAdmin(req)) return res.sendStatus(401);
+
+  // Merge only valid positive numbers for networks/sizes that already exist
+  const next = JSON.parse(JSON.stringify(prices));
+  for (const net in next) {
+    for (const size in next[net]) {
+      const v = parseFloat(req.body?.[net]?.[size]);
+      if (!isNaN(v) && v > 0) next[net][size] = v.toFixed(2);
+    }
+  }
+  prices = next;
+  fs.writeFileSync(PRICES_FILE, JSON.stringify(prices, null, 2));
+  res.json({ ok: true });
+});
+
+app.listen(PORT, () => console.log("Godfred Data Hub running on port", PORT));
+
+// =====================================================================
+// THE WEBSITE (this used to be public/index.html). Edit the HTML below.
+// Note: inside this block, a backtick must be written as \` and ${ as \${
+// =====================================================================
+const HTML = `<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -11,1247 +225,6 @@
 :root {
   --primary: #165DFF;
   --secondary: #36D399;
-  --accent: #F87272;
-  --dark: #0F172A;
-  --light: #F8FAFC;
-}
-body { 
-  font-family: 'Segoe UI', sans-serif; 
-  background: linear-gradient(135deg, #0F172A 0%, #1E293B 50%, #0F172A 100%); 
-  color: white; 
-  min-height: 100vh; 
-  overflow-x: hidden;
-}
+  --accen
 
-/* ===== ANIMATIONS ===== */
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(25px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes fadeInScale {
-  from { opacity: 0; transform: scale(0.85); }
-  to { opacity: 1; transform: scale(1); }
-}
-@keyframes float {
-  0%, 100% { transform: translateY(0px) rotate(0deg); }
-  50% { transform: translateY(-10px) rotate(1deg); }
-}
-@keyframes pulse-glow {
-  0% { box-shadow: 0 0 5px rgba(54, 211, 153, 0.4); }
-  50% { box-shadow: 0 0 25px rgba(54, 211, 153, 0.7), 0 0 40px rgba(22, 93, 255, 0.4); }
-  100% { box-shadow: 0 0 5px rgba(54, 211, 153, 0.4); }
-}
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-@keyframes bounce-slow {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
-}
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.animate-fade-up { animation: fadeInUp 0.6s ease forwards; }
-.animate-fade-scale { animation: fadeInScale 0.4s ease forwards; }
-.animate-float { animation: float 4s ease-in-out infinite; }
-.animate-pulse-glow { animation: pulse-glow 2s infinite; }
-.animate-bounce-slow { animation: bounce-slow 2.5s ease-in-out infinite; }
-
-.shimmer-skeleton {
-  background: linear-gradient(90deg, rgba(255,255,255,0.05) 25%, rgba(255,255,255,0.15) 50%, rgba(255,255,255,0.05) 75%);
-  background-size: 200% 100%;
-  animation: shimmer 1.5s infinite;
-}
-
-.gradient-hero {
-  background: linear-gradient(90deg, #165DFF, #36D399, #165DFF);
-  background-size: 200% 100%;
-  animation: gradient-shift 4s ease infinite;
-}
-
-/* ===== CARD & BADGE STYLES ===== */
-.package-card {
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  position: relative;
-  perspective: 1000px;
-}
-.package-card:hover {
-  transform: translateY(-8px) scale(1.03) rotateX(2deg);
-  box-shadow: 0 20px 35px rgba(22, 93, 255, 0.3), 0 0 15px rgba(54, 211, 153, 0.2);
-  border-color: rgba(54, 211, 153, 0.4);
-}
-
-.tab-btn {
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-.tab-btn.active {
-  background: linear-gradient(135deg, #165DFF, #36D399);
-  transform: scale(1.05);
-  box-shadow: 0 8px 20px rgba(22, 93, 255, 0.35);
-}
-
-.badge-pop {
-  background: linear-gradient(135deg, #F59E0B, #EF4444);
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 20px;
-  box-shadow: 0 4px 10px rgba(239, 68, 68, 0.4);
-}
-
-.badge-value {
-  background: linear-gradient(135deg, #10B981, #0EA5E9);
-  color: white;
-  font-size: 0.65rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  padding: 3px 8px;
-  border-radius: 20px;
-  box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);
-}
-
-.floating-alert { position: fixed; bottom: 24px; right: 24px; z-index: 999; animation: fadeInUp 0.5s ease forwards; }
-.hidden { display: none !important; }
-.logo-gradient { 
-  background: linear-gradient(135deg, #165DFF, #36D399); 
-  -webkit-background-clip: text; 
-  -webkit-text-fill-color: transparent; 
-}
-.modal-backdrop { 
-  position: fixed; inset: 0; background: rgba(0,0,0,0.85); 
-  backdrop-filter: blur(8px); z-index: 300; 
-  display: flex; align-items: center; justify-content: center; padding: 1rem;
-  animation: fadeInUp 0.3s ease;
-}
-
-#canvas-container { 
-  position: absolute; top: 0; left: 0; width: 100%; height: 500px; 
-  z-index: 0; pointer-events: none; 
-}
-.section { position: relative; z-index: 1; }
-
-.chat-bubble { position: fixed; bottom: 24px; left: 24px; z-index: 100; }
-.rating-star { cursor: pointer; transition: all 0.2s ease; font-size: 1.5rem; }
-.rating-star:hover { color: gold; transform: scale(1.2); }
-
-/* ================= LIGHT THEME OVERRIDES ================= */
-body[data-theme="light"] {
-  background: #F3F5F4 !important;
-  color: #0F172A;
-}
-body[data-theme="light"] #canvas-container { display: none; }
-body[data-theme="light"] nav {
-  margin: 10px 10px 0; width: auto; border-radius: 20px !important;
-  background: rgba(255,255,255,0.92) !important;
-  box-shadow: 0 8px 30px rgba(15,23,42,0.08);
-}
-body[data-theme="light"] header.section {
-  background: linear-gradient(135deg, #0B3B2E 0%, #12503D 55%, #0B3B2E 100%);
-  border-radius: 32px; margin: 16px; padding: 50px 24px;
-  box-shadow: 0 24px 60px rgba(11,59,46,0.28);
-}
-body[data-theme="light"] header.section h1,
-body[data-theme="light"] header.section p,
-body[data-theme="light"] header.section span:not(.gradient-hero) { color: #fff !important; }
-body[data-theme="light"] .tab-btn {
-  background: #fff !important; color: #0F172A !important; border-radius: 20px !important;
-  box-shadow: 0 4px 18px rgba(15,23,42,0.06); border: 1px solid rgba(15,23,42,0.06);
-}
-body[data-theme="light"] .tab-btn.active {
-  background: linear-gradient(135deg, #0B3B2E, #15694F) !important; color: #fff !important;
-  box-shadow: 0 14px 30px rgba(11,59,46,0.35) !important;
-}
-body[data-theme="light"] .package-card {
-  background: #fff !important; border-radius: 22px !important;
-  border-color: rgba(15,23,42,0.06) !important; box-shadow: 0 6px 22px rgba(15,23,42,0.06) !important;
-  color: #0F172A !important;
-}
-body[data-theme="light"] section#track > div,
-body[data-theme="light"] #faq-container > div,
-body[data-theme="light"] section#feedback > div,
-body[data-theme="light"] .bg-white\/5 {
-  background: #fff !important; border-radius: 22px !important;
-  border-color: rgba(15,23,42,0.06) !important; box-shadow: 0 6px 22px rgba(15,23,42,0.06) !important;
-  color: #0F172A !important;
-}
-body[data-theme="light"] input, body[data-theme="light"] textarea { color: #0F172A !important; }
-</style>
-<script>
-tailwind.config = {
-  theme: {
-    extend: {
-      colors: { primary: '#165DFF', secondary: '#36D399', accent: '#F87272', dark: '#0F172A' },
-      fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] }
-    }
-  }
-}
-</script>
-</head>
-<body>
-<script>
-  (function(){
-    const hour = new Date().getHours();
-    document.body.setAttribute('data-theme', (hour >= 6 && hour < 18) ? 'light' : 'dark');
-  })();
-</script>
-
-<!-- Toast Container -->
-<div id="toast-container" class="fixed top-5 right-5 z-[9999] flex flex-col gap-2 pointer-events-none"></div>
-
-<!-- 3D Animated Background Canvas -->
-<div id="canvas-container"></div>
-
-<!-- Top Status Strip -->
-<div class="bg-gradient-to-r from-emerald-950/80 via-slate-900 to-emerald-950/80 border-b border-white/10 py-2 px-4 text-xs flex flex-wrap justify-between items-center gap-2 text-center z-50 relative">
-  <div class="max-w-7xl mx-auto flex flex-wrap items-center justify-between w-full gap-2">
-    <span class="flex items-center gap-2 font-semibold text-emerald-400 mx-auto sm:mx-0">
-      <span class="relative flex h-2 w-2">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-      </span>
-      🟢 All Networks Operational (MTN • Telecel • AirtelTigo)
-    </span>
-    <span class="text-gray-300 hidden md:flex items-center gap-2 mx-auto sm:mx-0">
-      <span id="promo-banner" class="transition-opacity duration-500">💡 Tip: Fast automated delivery 24/7!</span>
-    </span>
-  </div>
-</div>
-
-<!-- Navigation -->
-<nav class="sticky top-0 z-50 bg-dark/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 animate-fade-up">
-  <div class="max-w-7xl mx-auto flex justify-between items-center">
-    <!-- Secret Method 1: Tapping 'G' logo 5 times in quick succession triggers Admin Portal -->
-    <a href="#" onclick="handleLogoClick(event)" class="flex items-center gap-2 select-none">
-      <div class="w-10 h-10 rounded-full gradient-hero flex items-center justify-center font-bold text-xl animate-pulse-glow">G</div>
-      <span class="font-bold text-xl logo-gradient">Godfred Data Hub</span>
-    </a>
-    <div class="hidden md:flex gap-6 text-sm">
-      <a href="#packages" class="hover:text-secondary transition-colors">Packages</a>
-      <a href="#track" class="hover:text-secondary transition-colors">Track Order</a>
-      <a href="#faq" class="hover:text-secondary transition-colors">FAQ</a>
-      <a href="#feedback" class="hover:text-secondary transition-colors">Feedback</a>
-    </div>
-    <button class="md:hidden text-2xl" onclick="toggleMobileMenu()">
-      <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M3 12h18"/><path d="M3 18h18"/></svg>
-    </button>
-  </div>
-  <div id="mobile-menu" class="hidden md:hidden mt-3 space-y-2 px-2 animate-fade-up">
-    <a href="#packages" class="block py-2 hover:text-secondary">Packages</a>
-    <a href="#track" class="block py-2 hover:text-secondary">Track Order</a>
-    <a href="#faq" class="block py-2 hover:text-secondary">FAQ</a>
-    <a href="#feedback" class="block py-2 hover:text-secondary">Feedback</a>
-  </div>
-</nav>
-
-<!-- Live Purchase Ticker Bar -->
-<div class="w-full bg-white/5 border-b border-white/10 py-2.5 overflow-hidden relative z-40">
-  <div class="max-w-7xl mx-auto px-4 flex items-center justify-between text-xs text-gray-300">
-    <div class="flex items-center gap-2 flex-shrink-0 bg-secondary/20 border border-secondary/30 px-2.5 py-1 rounded-full text-secondary font-bold text-[11px]">
-      <span class="w-2 h-2 rounded-full bg-secondary animate-pulse"></span> LIVE PURCHASES
-    </div>
-    <div class="overflow-hidden relative w-full ml-4">
-      <div id="ticker-text" class="whitespace-nowrap font-medium text-gray-200 transition-all duration-500">
-        🔥 Kwame just bought 5GB MTN · 2m ago
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- Hero Section -->
-<header class="section min-h-[85vh] flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-12 gap-8">
-  <div class="flex-1 text-center md:text-left">
-    <!-- Speed Badge -->
-    <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-4 py-1.5 rounded-full text-xs font-semibold text-emerald-400 mb-6 animate-fade-up">
-      <span class="relative flex h-2 w-2">
-        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-        <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-      </span>
-      ⚡ Delivered within 5 minutes
-    </div>
-
-    <h1 class="text-4xl md:text-6xl font-bold mb-6 leading-tight animate-fade-up">
-      Fast &amp; Affordable Data<br>
-      <span class="text-secondary animate-bounce-slow inline-block">MTN • AirtelTigo • Telecel</span>
-    </h1>
-    <p class="text-lg text-gray-300 max-w-xl mb-8 animate-fade-up">
-      Pay seamlessly via Mobile Money. Fast delivery guaranteed 24/7.
-    </p>
-    
-    <div class="flex flex-wrap justify-center md:justify-start gap-3 animate-fade-up">
-      <a href="#packages" class="gradient-hero px-7 py-3.5 rounded-full text-base font-semibold transition-all hover:scale-105 animate-pulse-glow flex items-center gap-2 shadow-xl">
-        Buy Data Now 
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>
-      </a>
-      <a href="https://whatsapp.com/channel/0029VbEYidXGpLHS9AxCAO2D" target="_blank" 
-         class="bg-green-600/80 hover:bg-green-600 px-5 py-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 border border-green-400/30">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.6 6.32A8.86 8.86 0 0 0 11.9 4C7 4 3 8 3 12.9c0 1.6.42 3.13 1.22 4.47L3 21l3.73-1.18A8.9 8.9 0 0 0 11.9 21.8c4.9 0 8.9-4 8.9-8.9a8.86 8.86 0 0 0-3.2-6.58zm-5.7 13.7a7.4 7.4 0 0 1-3.77-1.03l-.27-.16-2.24.71.72-2.18-.18-.28a7.4 7.4 0 0 1-1.14-3.96c0-4.1 3.34-7.44 7.44-7.44a7.4 7.4 0 0 1 5.26 2.18 7.4 7.4 0 0 1 2.18 5.26c0 4.1-3.34 7.44-7.44 7.44zm4.08-5.58c-.22-.11-1.32-.65-1.53-.72-.2-.08-.35-.11-.5.11-.15.22-.57.72-.7.87-.13.15-.26.17-.48.06-.22-.11-.94-.35-1.8-1.11-.66-.6-1.11-1.33-1.24-1.55-.13-.22-.01-.34.1-.45.1-.1.22-.26.33-.4.11-.13.15-.22.22-.37.07-.15.04-.28-.02-.4-.06-.11-.5-1.2-.68-1.65-.18-.43-.36-.37-.5-.38h-.43c-.15 0-.4.06-.6.28-.2.22-.8.78-.8 1.9 0 1.12.82 2.2.93 2.35.11.15 1.6 2.44 3.87 3.42.54.23.96.37 1.29.48.54.17 1.03.15 1.42.09.43-.06 1.32-.54 1.51-1.06.19-.52.19-.96.13-1.06-.05-.1-.2-.16-.42-.27z"/></svg>
-        WhatsApp
-      </a>
-      <a href="https://t.me/godfreddatahub" target="_blank" 
-         class="bg-sky-600/80 hover:bg-sky-600 px-5 py-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 border border-sky-400/30">
-        <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.38-.49 1.07-.75 4.19-1.82 6.98-3.02 8.38-3.6 3.98-1.65 4.81-1.94 5.35-1.95.12 0 .38.03.55.17.14.12.18.28.2.46-.02.07-.02.14-.03.22z"/></svg>
-        Telegram
-      </a>
-    </div>
-  </div>
-
-  <!-- Hero Mascot / Visual SVG Graphic -->
-  <div class="flex-1 flex justify-center items-center animate-float relative">
-    <div class="absolute w-72 h-72 bg-primary/20 rounded-full blur-3xl -z-10"></div>
-    <svg viewBox="0 0 320 320" class="w-72 h-72 md:w-96 md:h-96 filter drop-shadow-2xl">
-      <circle cx="160" cy="160" r="140" fill="none" stroke="#36D399" stroke-width="2" stroke-dasharray="8 8" class="opacity-40 animate-spin" style="animation-duration: 20s;"/>
-      <circle cx="160" cy="160" r="110" fill="rgba(22, 93, 255, 0.1)" stroke="#165DFF" stroke-width="3"/>
-      <rect x="105" y="60" width="110" height="200" rx="20" fill="#0F172A" stroke="#36D399" stroke-width="4"/>
-      <rect x="115" y="75" width="90" height="150" rx="10" fill="#1E293B"/>
-      <path d="M125 180 Q 145 150 160 170 T 195 160" fill="none" stroke="#36D399" stroke-width="3" stroke-linecap="round"/>
-      <path d="M125 150 Q 145 130 160 145 T 195 135" fill="none" stroke="#165DFF" stroke-width="3" stroke-linecap="round"/>
-      <polygon points="165,95 145,135 162,135 152,175 175,125 158,125" fill="#F59E0B" class="animate-pulse"/>
-      <circle cx="60" cy="120" r="18" fill="#165DFF" class="animate-bounce"/>
-      <text x="60" y="125" fill="white" font-size="10" font-weight="bold" text-anchor="middle">5G</text>
-      <circle cx="260" cy="190" r="20" fill="#36D399" class="animate-bounce" style="animation-delay: 1s;"/>
-      <text x="260" y="195" fill="#0F172A" font-size="10" font-weight="bold" text-anchor="middle">MoMo</text>
-    </svg>
-  </div>
-</header>
-
-<!-- Floating Alert Notification -->
-<div id="purchase-alert" class="floating-alert hidden bg-dark/95 backdrop-blur border border-secondary/40 rounded-xl p-3.5 max-w-xs shadow-2xl">
-  <div class="flex items-start gap-3">
-    <div class="text-secondary text-2xl animate-bounce">⚡</div>
-    <div>
-      <p class="text-sm font-semibold text-white"><span id="buyer-name">Someone</span> bought data!</p>
-      <p class="text-xs text-secondary font-medium"><span id="buyer-pkg">5GB MTN</span> · Delivered</p>
-      <p class="text-[10px] text-gray-400 mt-0.5" id="deliver-time">Just now</p>
-    </div>
-  </div>
-</div>
-
-<!-- Packages Section -->
-<section id="packages" class="section px-4 py-16 max-w-6xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-2 animate-fade-up">📦 Choose Your Network</h2>
-  <p class="text-center text-gray-400 mb-10 animate-fade-up">Select a network to unlock instant bundles</p>
-  
-  <!-- Network Tabs -->
-  <div class="flex flex-wrap justify-center gap-4 mb-8 animate-fade-up">
-    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium flex items-center gap-2" data-network="mtn">
-      <span class="w-3 h-3 rounded-full bg-yellow-400"></span> MTN
-    </button>
-    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium flex items-center gap-2" data-network="airteltigo">
-      <span class="w-3 h-3 rounded-full bg-red-400"></span> AirtelTigo
-    </button>
-    <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium flex items-center gap-2" data-network="telecel">
-      <span class="w-3 h-3 rounded-full bg-green-400"></span> Telecel
-    </button>
-  </div>
-
-  <!-- Phone Input Card -->
-  <div class="max-w-md mx-auto mb-10 bg-white/5 p-5 rounded-2xl border border-white/10 animate-fade-up shadow-xl">
-    <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Recipient Phone Number</label>
-    <div class="flex gap-2">
-      <input type="tel" id="buyer-number" placeholder="054XXXXXXX" 
-        class="flex-1 px-4 py-3 rounded-xl bg-white/10 border border-white/20 focus:border-primary outline-none text-white transition-colors"
-        oninput="detectNetwork(this.value)">
-      <span id="detected-network" class="flex items-center px-4 rounded-xl bg-white/5 text-sm font-bold text-gray-400">—</span>
-    </div>
-  </div>
-
-  <!-- Packages Container -->
-  <div id="packages-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-5">
-    <p class="col-span-full text-center text-gray-400 py-10 animate-fade-scale">👆 Select a network above to view packages</p>
-  </div>
-</section>
-
-<!-- Order Tracking & History Section -->
-<section id="track" class="section px-4 py-16 max-w-xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-2 animate-fade-up">🔍 Track Your Order</h2>
-  <p class="text-center text-gray-400 mb-8">Enter your phone number to check status</p>
-  <div class="bg-white/5 p-6 rounded-2xl border border-white/10 animate-fade-up shadow-2xl">
-    <input type="tel" id="track-number" placeholder="Enter phone number" 
-      class="w-full px-4 py-3.5 rounded-xl bg-white/10 border border-white/20 mb-4 focus:border-primary outline-none transition-colors"
-      onkeyup="checkOrderStatus()">
-    <button onclick="checkOrderStatus()" class="w-full bg-primary hover:bg-primary/90 py-3.5 rounded-xl font-bold transition-all hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2">
-      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> Check Order History
-    </button>
-    <div id="track-result" class="mt-5 hidden animate-fade-scale"></div>
-  </div>
-</section>
-
-<!-- FAQ Section -->
-<section id="faq" class="section px-4 py-16 max-w-2xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-8 animate-fade-up">❓ Frequently Asked Questions</h2>
-  <div id="faq-container" class="space-y-4"></div>
-</section>
-
-<!-- Feedback Section -->
-<section id="feedback" class="section px-4 py-16 max-w-xl mx-auto">
-  <h2 class="text-3xl font-bold text-center mb-8 animate-fade-up">⭐ Rate Us</h2>
-  <div class="bg-white/5 p-6 rounded-2xl border border-white/10 animate-fade-up shadow-2xl">
-    <div class="flex justify-center gap-2 text-4xl mb-6" id="rating-stars">
-      <span class="rating-star text-gray-500" data-val="1">★</span>
-      <span class="rating-star text-gray-500" data-val="2">★</span>
-      <span class="rating-star text-gray-500" data-val="3">★</span>
-      <span class="rating-star text-gray-500" data-val="4">★</span>
-      <span class="rating-star text-gray-500" data-val="5">★</span>
-    </div>
-    <textarea id="feedback-text" rows="3" placeholder="Write your feedback..."
-      class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 mb-4 focus:border-primary outline-none transition-colors"></textarea>
-    <button onclick="submitFeedback()" class="w-full bg-secondary hover:bg-secondary/90 py-3.5 rounded-xl font-bold text-slate-900 transition-all hover:scale-[1.01]">
-      Submit Feedback
-    </button>
-    <p id="feedback-msg" class="mt-4 text-center text-secondary font-medium hidden">Thank you for rating us! ✅</p>
-  </div>
-</section>
-
-<!-- Footer -->
-<footer class="border-t border-white/10 py-8 px-4 text-center text-sm text-gray-400">
-  <p class="mb-2">© 2026 Godfred Data Hub. All rights reserved.</p>
-  <p class="mb-3">MTN • AirtelTigo • Telecel — Automated MoMo Delivery</p>
-  <div class="flex justify-center flex-wrap gap-4 text-xs font-semibold mb-4">
-    <a href="https://whatsapp.com/channel/0029VbEYidXGpLHS9AxCAO2D" target="_blank" class="text-green-400 hover:underline">WhatsApp Hub</a>
-    <span>•</span>
-    <a href="https://t.me/godfreddatahub" target="_blank" class="text-sky-400 hover:underline">Telegram Channel</a>
-  </div>
-  <div class="flex justify-center flex-wrap gap-4 text-xs text-gray-400">
-    <button onclick="openPolicyModal('terms')" class="hover:text-white hover:underline transition-colors">Terms of Service</button>
-    <span>•</span>
-    <button onclick="openPolicyModal('refund')" class="hover:text-white hover:underline transition-colors">Refund & Cancellation Policy</button>
-    <span>•</span>
-    <button onclick="openPolicyModal('privacy')" class="hover:text-white hover:underline transition-colors">Privacy Policy</button>
-  </div>
-</footer>
-
-<!-- Interactive AI Chatbot -->
-<div class="chat-bubble">
-  <button onclick="toggleChat()" class="w-14 h-14 rounded-full bg-primary text-white flex items-center justify-center animate-pulse-glow shadow-2xl">
-    <svg viewBox="0 0 24 24" width="26" height="26" fill="currentColor">
-      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
-    </svg>
-  </button>
-  <div id="chat-box" class="hidden absolute bottom-16 left-0 w-80 sm:w-96 bg-dark border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-scale">
-    <div class="bg-primary/20 px-4 py-3 font-bold border-b border-white/10 flex justify-between items-center">
-      <span class="flex items-center gap-2">🤖 Godfred AI Assistant <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span></span>
-      <button onclick="toggleChat()" class="text-gray-400 hover:text-white text-lg">&times;</button>
-    </div>
-    <div id="chat-messages" class="h-80 overflow-y-auto p-4 space-y-3 text-xs sm:text-sm">
-      <p class="text-gray-300 animate-fade-up bg-white/5 p-3 rounded-xl border border-white/10">
-        👋 Hi! I'm your Godfred Data Hub Assistant. Ask me anything about bundle prices, delivery times, payment, or order tracking!
-      </p>
-    </div>
-    <div class="p-3 border-t border-white/10 flex gap-2">
-      <input type="text" id="chat-input" placeholder="Type your question..." 
-        class="flex-1 px-3 py-2 rounded-xl bg-white/10 border border-white/20 outline-none text-xs sm:text-sm text-white"
-        onkeydown="if(event.key==='Enter')sendChat()">
-      <button onclick="sendChat()" class="bg-primary px-3.5 rounded-xl hover:bg-primary/90 font-bold text-white">➤</button>
-    </div>
-  </div>
-</div>
-
-<!-- Legal Policy Modal -->
-<div id="policy-modal" class="hidden modal-backdrop">
-  <div class="bg-dark border border-white/10 rounded-2xl max-w-2xl w-full p-6 animate-fade-scale shadow-2xl max-h-[85vh] flex flex-col">
-    <div class="flex justify-between items-center mb-4 pb-3 border-b border-white/10">
-      <h3 id="policy-title" class="text-xl font-bold text-white"></h3>
-      <button onclick="closePolicyModal()" class="text-gray-400 hover:text-white text-2xl font-bold">&times;</button>
-    </div>
-    <div id="policy-content" class="overflow-y-auto text-sm text-gray-300 space-y-4 pr-2 leading-relaxed"></div>
-  </div>
-</div>
-
-<!-- MoMo Payment Modal -->
-<div id="payment-modal" class="hidden modal-backdrop">
-  <div class="bg-dark border border-white/10 rounded-2xl max-w-md w-full p-6 animate-fade-scale shadow-2xl">
-    <div class="flex justify-between items-center mb-5">
-      <h3 class="text-xl font-bold flex items-center gap-2">💳 MoMo Checkout</h3>
-      <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
-    </div>
-    
-    <div id="pay-step-1">
-      <div class="bg-white/5 p-4 rounded-xl mb-5 animate-fade-up border border-white/10">
-        <p class="mb-1 text-sm text-gray-300">Package: <strong class="text-white" id="pay-pkg"></strong></p>
-        <p class="mb-1 text-sm text-gray-300">Network: <strong class="text-white" id="pay-net"></strong></p>
-        <p class="mb-1 text-sm text-gray-300">Recipient: <strong class="text-white" id="pay-phone"></strong></p>
-        <p class="text-2xl font-bold text-secondary mt-2">GH₵ <span id="pay-amount"></span></p>
-      </div>
-      
-      <p class="mb-2 font-semibold text-xs text-gray-400 uppercase tracking-wider">Select Payment Network</p>
-      <div class="space-y-2 mb-5">
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-yellow-400 transition-all">
-          <input type="radio" name="momo-method" value="mtn" checked class="accent-primary">
-          <span class="font-bold text-yellow-400">MTN MoMo</span>
-        </label>
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-red-400 transition-all">
-          <input type="radio" name="momo-method" value="airteltigo" class="accent-primary">
-          <span class="font-bold text-red-400">AirtelTigo Money</span>
-        </label>
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-green-400 transition-all">
-          <input type="radio" name="momo-method" value="telecel" class="accent-primary">
-          <span class="font-bold text-green-400">Telecel Cash</span>
-        </label>
-      </div>
-      
-      <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Your MoMo Paying Number</label>
-      <input type="tel" id="momo-number" placeholder="054XXXXXXX" 
-        class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 mb-5 focus:border-primary outline-none transition-colors">
-      
-      <button onclick="initiatePayment()" class="w-full bg-secondary hover:bg-secondary/90 text-slate-900 font-bold py-3.5 rounded-xl transition-all hover:scale-[1.01] shadow-xl">
-        ⚡ Confirm &amp; Pay
-      </button>
-    </div>
-    
-    <div id="pay-step-2" class="hidden text-center py-6">
-      <div class="text-5xl mb-4 animate-bounce">📲</div>
-      <h4 class="text-xl font-bold mb-2">Prompt Sent to Phone</h4>
-      <p class="text-sm text-gray-400 mb-5">Check your phone screen and enter your MoMo PIN to authorize payment.</p>
-      <div class="bg-white/5 p-4 rounded-xl mb-5 border border-white/10">
-        <p class="text-sm">Amount: <span class="font-bold text-secondary">GH₵ <span id="confirm-amount"></span></span></p>
-        <p class="text-xs text-gray-400 mt-1">Ref: <span id="confirm-ref"></span></p>
-      </div>
-      <button onclick="verifyPayment()" id="verify-btn" class="w-full bg-primary hover:bg-primary/90 font-bold py-3.5 rounded-xl mb-3 transition-all shadow-xl">
-        ✅ I Have Paid / Confirm
-      </button>
-      <p id="payment-status" class="text-xs text-gray-400">Waiting for MoMo confirmation...</p>
-    </div>
-  </div>
-</div>
-
-<!-- Admin Portal (Hidden by default, opened via secret triggers) -->
-<div id="admin-modal" class="hidden modal-backdrop p-0 items-stretch justify-start z-[999]">
-  <div class="flex w-full h-full bg-slate-50 text-slate-800 overflow-hidden">
-    <aside class="w-64 bg-white border-r border-slate-200 p-6 flex-shrink-0 hidden sm:flex flex-col justify-between">
-      <div>
-        <div class="flex items-center gap-2 mb-8">
-          <div class="w-9 h-9 rounded-xl gradient-hero flex items-center justify-center text-white font-bold">G</div>
-          <span class="font-bold text-lg text-emerald-800">Admin Portal</span>
-        </div>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Navigation</p>
-        <nav class="space-y-1">
-          <div class="p-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold cursor-pointer" onclick="switchAdminTab('dashboard')">Dashboard</div>
-          <div class="p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600" onclick="switchAdminTab('packages')">Data Packages</div>
-          <div class="p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600" onclick="switchAdminTab('sales')">Sales &amp; Orders</div>
-        </nav>
-      </div>
-      <button onclick="closeAdmin()" class="w-full py-2.5 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200">Close Portal</button>
-    </aside>
-    <main class="flex-1 overflow-y-auto p-6 sm:p-10">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-slate-900" id="admin-page-title">⚙️ Admin Control Center</h2>
-        <button onclick="closeAdmin()" class="text-slate-400 hover:text-slate-700 text-2xl">&times;</button>
-      </div>
-
-      <div id="admin-login" class="flex items-center justify-center min-h-[50vh]">
-        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-slate-100">
-          <h3 class="text-xl font-bold mb-2">Admin Sign In</h3>
-          <p class="text-sm text-slate-500 mb-5">Enter your administrative passcode</p>
-          <input type="password" id="admin-pass" placeholder="Enter password" 
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none focus:border-emerald-500">
-          <button onclick="verifyAdmin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg">Sign In</button>
-        </div>
-      </div>
-
-      <div id="admin-panel" class="hidden">
-        <div id="adm-tab-dashboard" class="adm-tab active">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md"><p class="text-xs opacity-80 uppercase">Today's Sales</p><p class="text-3xl font-bold mt-1" id="adm-stat-sales">0</p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Estimated Profit</p><p class="text-3xl font-bold text-emerald-600 mt-1">GH₵<span id="adm-stat-profit">0.00</span></p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Bundles Delivered</p><p class="text-3xl font-bold text-slate-800 mt-1" id="adm-stat-packages">0</p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Total Visits</p><p class="text-3xl font-bold text-slate-800 mt-1" id="adm-stat-visitors">0</p></div>
-          </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Recent Transactions</h4>
-            <div id="adm-recent-orders" class="text-sm text-slate-600">No recent orders yet.</div>
-          </div>
-        </div>
-        <div id="adm-tab-packages" class="adm-tab hidden">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Edit Package Prices</h4>
-            <div id="price-editor" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-            <button onclick="saveAllPrices()" class="mt-6 bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:bg-emerald-700 transition-all">Save All Changes</button>
-          </div>
-        </div>
-        <div id="adm-tab-sales" class="adm-tab hidden">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Full Order Logs</h4>
-            <div id="adm-all-sales" class="text-sm text-slate-600">No sales recorded.</div>
-          </div>
-        </div>
-      </div>
-    </main>
-  </div>
-</div>
-
-<script>
-// ========== CONFIG ==========
-const CONFIG = {
-  adminPassword: "godfred123",
-  paystackPublicKey: "pk_live_b4f9f32059972b8a1b85cbfde64d988b9deb3f43", // Replace with your Paystack Public Key
-  momoApiUrl: "https://api.techlink.com.gh/v1/payment/charge"
-};
-
-// ========== DEFAULT PACKAGES ==========
-const defaultPackages = {
-  mtn: [
-    {size: "100MB", price: "1.00", cost: "0.70"},
-    {size: "250MB", price: "2.00", cost: "1.40"},
-    {size: "500MB", price: "3.50", cost: "2.45"},
-    {size: "1GB", price: "6.00", cost: "4.20", badge: "best_value"},
-    {size: "2GB", price: "10.00", cost: "7.00"},
-    {size: "3GB", price: "14.00", cost: "9.80"},
-    {size: "5GB", price: "22.00", cost: "15.40", badge: "popular"},
-    {size: "10GB", price: "38.00", cost: "26.60"},
-    {size: "20GB", price: "70.00", cost: "49.00"},
-    {size: "50GB", price: "150.00", cost: "105.00"}
-  ],
-  airteltigo: [
-    {size: "100MB", price: "0.90", cost: "0.60"},
-    {size: "500MB", price: "3.20", cost: "2.10"},
-    {size: "1GB", price: "5.50", cost: "3.70", badge: "best_value"},
-    {size: "2GB", price: "9.00", cost: "6.00"},
-    {size: "5GB", price: "20.00", cost: "13.40", badge: "popular"},
-    {size: "10GB", price: "35.00", cost: "23.50"},
-    {size: "20GB", price: "65.00", cost: "43.50"},
-    {size: "50GB", price: "135.00", cost: "90.50"}
-  ],
-  telecel: [
-    {size: "100MB", price: "0.80", cost: "0.55"},
-    {size: "500MB", price: "3.00", cost: "2.00"},
-    {size: "1GB", price: "5.00", cost: "3.40", badge: "best_value"},
-    {size: "2GB", price: "8.50", cost: "5.75"},
-    {size: "5GB", price: "18.50", cost: "12.60", badge: "popular"},
-    {size: "10GB", price: "32.00", cost: "21.80"},
-    {size: "20GB", price: "60.00", cost: "40.80"},
-    {size: "50GB", price: "125.00", cost: "85.00"}
-  ]
-};
-
-let saved = localStorage.getItem('gdhub_prices');
-let packages = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPackages));
-let activeNetwork = null;
-let orders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
-let currentPurchase = null;
-
-// ========== LEGAL POLICY MODAL FUNCTIONS ==========
-function openPolicyModal(type) {
-  const modal = document.getElementById('policy-modal');
-  const title = document.getElementById('policy-title');
-  const content = document.getElementById('policy-content');
-  
-  if (type === 'terms') {
-    title.innerText = '📜 Terms of Service';
-    content.innerHTML = `
-      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">1. Overview</h4>
-      <p>Godfred Data Hub provides instant internet data bundle top-up services for major mobile networks in Ghana, including MTN, Telecel, and AirtelTigo. By placing an order on our platform, you agree to these Terms of Service.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">2. Service Delivery & Fulfillment</h4>
-      <p>Data top-ups are processed automatically upon successful payment confirmation through Mobile Money. Deliveries typically take between a few seconds and 15 minutes. During peak times or network operator maintenance, delivery may experience minor delays.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">3. User Responsibilities</h4>
-      <p>You are solely responsible for providing the correct recipient mobile phone number and selecting the corresponding network provider. Godfred Data Hub is not responsible for failed top-ups or data sent to wrong numbers due to customer entry error.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">4. Pricing & Payments</h4>
-      <p>All prices are listed in Ghana Cedi (GH₵) and include applicable processing fees. Prices are subject to change without prior notice based on telecom operator tariff adjustments.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">5. Limitation of Liability</h4>
-      <p>Godfred Data Hub is a third-party data distributor and is not responsible for network outages, signal coverage issues, or data expiration rules set by MTN, Telecel, or AirtelTigo.</p>
-    `;
-  } else if (type === 'refund') {
-    title.innerText = '🔄 Refund & Cancellation Policy';
-    content.innerHTML = `
-      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">1. Digital Goods Exemption</h4>
-      <p>Due to the instant digital nature of mobile data top-ups, all successful top-up transactions are final and non-reversible once delivered to the specified phone number.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">2. Eligible Refund Conditions</h4>
-      <p>You are entitled to a full refund under the following circumstances:</p>
-      <ul class="list-disc pl-5 space-y-1 my-2">
-        <li><strong>Unfulfilled Orders:</strong> Payment was deducted from your account, but the data bundle was not delivered within 24 hours due to a system error.</li>
-        <li><strong>Duplicate Payments:</strong> You were charged twice for a single order due to a payment processing error.</li>
-      </ul>
-      
-      <h4 class="font-bold text-white text-base mt-3">3. Non-Refundable Scenarios</h4>
-      <p>Refunds will not be issued if an incorrect phone number was provided during checkout and the data was successfully credited to that number, or if the wrong network provider was selected.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">4. How to Request a Refund</h4>
-      <p>To request a refund, contact our support team via our official WhatsApp Channel or Telegram group with your phone number, payment reference, and transaction date. Verified refunds will be credited back to your original Mobile Money account within 24 to 48 hours.</p>
-    `;
-  } else if (type === 'privacy') {
-    title.innerText = '🔒 Privacy Policy';
-    content.innerHTML = `
-      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">1. Information We Collect</h4>
-      <p>To process and deliver your data orders, we collect minimal necessary information, including:</p>
-      <ul class="list-disc pl-5 space-y-1 my-2">
-        <li>Recipient phone number and Mobile Money account number.</li>
-        <li>Payment reference, date, and order status.</li>
-        <li>Customer support messages and feedback ratings.</li>
-      </ul>
-      
-      <h4 class="font-bold text-white text-base mt-3">2. How We Use Your Information</h4>
-      <p>Your information is used strictly to deliver data top-ups to your designated phone number, process secure payments via Paystack/MoMo, verify transaction logs, and provide customer assistance.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">3. Data Security & Third-Party Sharing</h4>
-      <p>We do not sell, trade, or rent customer personal information to any third parties. All financial payments are securely processed through encrypted payment providers (Paystack). We do not store Mobile Money PINs or credit card details.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">4. Contact & Inquiries</h4>
-      <p>If you have questions regarding your data privacy or wish to request data deletion, please contact us via our WhatsApp or Telegram channels.</p>
-    `;
-  }
-  
-  modal.classList.remove('hidden');
-}
-
-function closePolicyModal() {
-  document.getElementById('policy-modal').classList.add('hidden');
-}
-
-// ========== TOAST NOTIFICATION SYSTEM ==========
-function showToast(msg, type = 'info') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  const bg = type === 'error' ? 'bg-red-600' : type === 'success' ? 'bg-emerald-600' : 'bg-primary';
-  toast.className = `${bg} text-white text-sm font-semibold px-5 py-3.5 rounded-xl shadow-2xl flex items-center gap-2 pointer-events-auto border border-white/20 animate-fade-up`;
-  toast.innerHTML = `<span>${msg}</span>`;
-  container.appendChild(toast);
-  setTimeout(() => {
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateY(-10px)';
-    toast.style.transition = 'all 0.3s ease';
-    setTimeout(() => toast.remove(), 300);
-  }, 3500);
-}
-
-// ========== CONFETTI ANIMATION ==========
-function triggerConfetti() {
-  const canvas = document.createElement('canvas');
-  canvas.style.position = 'fixed';
-  canvas.style.top = '0'; canvas.style.left = '0';
-  canvas.style.width = '100vw'; canvas.style.height = '100vh';
-  canvas.style.pointerEvents = 'none'; canvas.style.zIndex = '99999';
-  document.body.appendChild(canvas);
-  const ctx = canvas.getContext('2d');
-  canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-  const particles = Array.from({length: 70}, () => ({
-    x: Math.random() * canvas.width,
-    y: Math.random() * canvas.height - canvas.height,
-    r: Math.random() * 6 + 4,
-    d: Math.random() * 70,
-    color: ['#165DFF', '#36D399', '#F87272', '#F59E0B', '#EC4899'][Math.floor(Math.random() * 5)],
-    tilt: Math.random() * 10 - 10,
-    tiltAngleIncremental: Math.random() * 0.07 + 0.05,
-    tiltAngle: 0
-  }));
-  let ticks = 0;
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    particles.forEach(p => {
-      ctx.beginPath(); ctx.lineWidth = p.r; ctx.strokeStyle = p.color;
-      ctx.moveTo(p.x + p.tilt + p.r / 2, p.y);
-      ctx.lineTo(p.x + p.tilt, p.y + p.tilt + p.r / 2);
-      ctx.stroke();
-      p.tiltAngle += p.tiltAngleIncremental;
-      p.y += (Math.cos(p.d) + 3 + p.r / 2) / 2;
-      p.tilt = Math.sin(p.tiltAngle) * 15;
-    });
-    ticks++;
-    if (ticks < 140) requestAnimationFrame(draw); else canvas.remove();
-  }
-  draw();
-}
-
-// ========== ROTATING PROMO BANNER & TICKER ==========
-const promoTips = [
-  "💡 Tip: Fast automated delivery 24/7!",
-  "⚡ Orders are processed automatically within 5 minutes!",
-  "🎁 Special discount on 10GB & 20GB bundles today!",
-  "📱 Works on all unlocked SIMs & router devices!"
-];
-let promoIdx = 0;
-setInterval(() => {
-  const el = document.getElementById('promo-banner');
-  if (el) {
-    promoIdx = (promoIdx + 1) % promoTips.length;
-    el.style.opacity = '0';
-    setTimeout(() => {
-      el.textContent = promoTips[promoIdx];
-      el.style.opacity = '1';
-    }, 400);
-  }
-}, 5000);
-
-const tickerItems = [
-  "Kwame bought 5GB MTN · 2m ago",
-  "Ama bought 2GB Telecel · 4m ago",
-  "Kofi bought 10GB AirtelTigo · 6m ago",
-  "Abena bought 50GB MTN · 9m ago",
-  "Yaw bought 1GB Telecel · 12m ago"
-];
-let tickerIdx = 0;
-setInterval(() => {
-  const el = document.getElementById('ticker-text');
-  if (el) {
-    tickerIdx = (tickerIdx + 1) % tickerItems.length;
-    el.style.opacity = '0';
-    setTimeout(() => {
-      el.textContent = "🔥 " + tickerItems[tickerIdx];
-      el.style.opacity = '1';
-    }, 400);
-  }
-}, 4000);
-
-// ========== RENDER PACKAGES WITH SKELETON & BADGES ==========
-function renderPackages() {
-  const container = document.getElementById('packages-container');
-  if (!activeNetwork) {
-    container.innerHTML = '<p class="col-span-full text-center text-gray-400 py-10 animate-fade-scale">👆 Click a network above to view packages</p>';
-    return;
-  }
-
-  container.innerHTML = Array(8).fill(0).map(() => `
-    <div class="h-36 rounded-2xl shimmer-skeleton border border-white/5"></div>
-  `).join('');
-
-  setTimeout(() => {
-    const list = packages[activeNetwork];
-
-    container.innerHTML = list.map((pkg, idx) => `
-      <div class="package-card bg-white/5 rounded-2xl overflow-hidden border border-white/10 text-center p-4 flex flex-col justify-between relative shadow-lg">
-        ${pkg.badge === 'popular' ? '<div class="absolute top-2 right-2 badge-pop">🔥 POPULAR</div>' : ''}
-        ${pkg.badge === 'best_value' ? '<div class="absolute top-2 right-2 badge-value">💎 BEST VALUE</div>' : ''}
-        
-        <div class="pt-2">
-          <h3 class="text-2xl font-black tracking-tight">${pkg.size}</h3>
-        </div>
-        
-        <div class="my-3">
-          <p class="text-xl font-bold text-secondary">GH₵${pkg.price}</p>
-        </div>
-
-        <button onclick="startPurchase('${activeNetwork}', ${idx})" 
-          class="w-full bg-primary hover:bg-primary/90 font-bold py-2.5 rounded-xl text-sm transition-all shadow-md hover:scale-[1.02]">
-          Buy Bundle
-        </button>
-      </div>
-    `).join('');
-  }, 250);
-}
-
-document.querySelectorAll('.tab-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    activeNetwork = btn.dataset.network;
-    localStorage.setItem('gdhub_last_net', activeNetwork);
-    renderPackages();
-  });
-});
-
-// ========== NETWORK DETECTION ==========
-function detectNetwork(num) {
-  const clean = num.replace(/\D/g, '');
-  localStorage.setItem('gdhub_last_phone', clean);
-  const label = document.getElementById('detected-network');
-  let net = null;
-  if (/^(024|025|053|054|055|059)/.test(clean)) net = 'MTN';
-  else if (/^(026|027|056|057)/.test(clean)) net = 'AirtelTigo';
-  else if (/^(020|050)/.test(clean)) net = 'Telecel';
-  
-  label.textContent = net || '—';
-  label.className = net ? 'flex items-center px-4 rounded-xl bg-secondary/20 text-sm font-bold text-secondary' 
-                       : 'flex items-center px-4 rounded-xl bg-white/5 text-sm font-bold text-gray-400';
-  return net;
-}
-
-// ========== PURCHASE FLOW ==========
-function startPurchase(net, idx) {
-  const number = document.getElementById('buyer-number').value.trim();
-  if (!number || number.length < 9) {
-    showToast('⚠️ Please enter your recipient phone number first', 'error');
-    document.getElementById('buyer-number').focus();
-    return;
-  }
-
-  const pkg = packages[net][idx];
-  currentPurchase = { network: net, package: pkg, phone: number, orderId: 'GD-' + Date.now() };
-
-  document.getElementById('pay-pkg').textContent = pkg.size;
-  document.getElementById('pay-net').textContent = net.toUpperCase();
-  document.getElementById('pay-phone').textContent = number;
-  document.getElementById('pay-amount').textContent = pkg.price;
-  document.getElementById('momo-number').value = number;
-  
-  document.getElementById('payment-modal').classList.remove('hidden');
-  document.getElementById('pay-step-1').classList.remove('hidden');
-  document.getElementById('pay-step-2').classList.add('hidden');
-}
-
-function closePaymentModal() {
-  document.getElementById('payment-modal').classList.add('hidden');
-  currentPurchase = null;
-}
-
-function initiatePayment() {
-  const momoNumber = document.getElementById('momo-number').value.trim();
-  if (!momoNumber || momoNumber.length < 9) {
-    showToast('⚠️ Please enter a valid MoMo payment number', 'error');
-    return;
-  }
-
-  document.getElementById('pay-step-1').classList.add('hidden');
-  document.getElementById('pay-step-2').classList.remove('hidden');
-  document.getElementById('confirm-amount').textContent = currentPurchase.package.price;
-  document.getElementById('confirm-ref').textContent = currentPurchase.orderId;
-}
-
-function verifyPayment() {
-  const btn = document.getElementById('verify-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Confirming Payment...';
-
-  setTimeout(() => {
-    const order = {
-      id: currentPurchase.orderId,
-      network: currentPurchase.network,
-      number: currentPurchase.phone,
-      package: `${currentPurchase.package.size} — GH₵${currentPurchase.package.price}`,
-      ordered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      delivered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      status: 'delivered'
-    };
-    orders.unshift(order);
-    localStorage.setItem('gdhub_orders', JSON.stringify(orders));
-    
-    tickerItems.unshift(`${order.number.substring(0,3)}***${order.number.slice(-2)} bought ${currentPurchase.package.size} ${currentPurchase.network.toUpperCase()} · Just now`);
-    
-    triggerConfetti();
-    showToast(`✅ Delivered! ${currentPurchase.package.size} sent to ${currentPurchase.phone}`, 'success');
-    showPurchaseAlert(order);
-    closePaymentModal();
-    btn.disabled = false;
-    btn.textContent = '✅ I Have Paid / Confirm';
-  }, 1200);
-}
-
-function showPurchaseAlert(order) {
-  const alertBox = document.getElementById('purchase-alert');
-  document.getElementById('buyer-name').textContent = order.number.replace(/(\d{3})\d+(\d{2})/, '$1****$2');
-  document.getElementById('buyer-pkg').textContent = order.package;
-  document.getElementById('deliver-time').textContent = order.delivered;
-  alertBox.classList.remove('hidden');
-  setTimeout(() => alertBox.classList.add('hidden'), 5000);
-}
-
-// ========== TRACK ORDER & HISTORY ==========
-function checkOrderStatus() {
-  const num = document.getElementById('track-number').value.trim();
-  const matches = orders.filter(o => o.number.includes(num));
-  const resultDiv = document.getElementById('track-result');
-  
-  if (!matches.length) {
-    resultDiv.classList.remove('hidden');
-    resultDiv.innerHTML = `<p class="text-accent text-sm font-semibold">No orders found for this number.</p>`;
-    return;
-  }
-  resultDiv.classList.remove('hidden');
-  resultDiv.innerHTML = `
-    <div class="mb-2 font-bold text-xs text-emerald-400 uppercase tracking-wider">Welcome Back! Recent Orders</div>
-    <div class="space-y-2">
-      ${matches.slice(0, 3).map(o => `
-        <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 text-left">
-          <p class="text-sm font-bold">${o.package}</p>
-          <div class="flex justify-between items-center text-xs text-gray-400 mt-1">
-            <span>Status: <strong class="text-secondary uppercase">${o.status}</strong></span>
-            <span>${o.delivered}</span>
-          </div>
-        </div>
-      `).join('')}
-    </div>
-  `;
-}
-
-// ========== FAQ ==========
-const faqs = [
-  {q: "How fast is delivery?", a: "Data is delivered automatically via direct network integration within 5 minutes of payment."},
-  {q: "Which MoMo networks are supported?", a: "MTN MoMo, Telecel Cash, and AirtelTigo Money are all fully supported."},
-  {q: "Can I buy for another person?", a: "Yes! Simply enter the recipient's phone number in the number box before clicking Buy."}
-];
-document.getElementById('faq-container').innerHTML = faqs.map((f, i) => `
-  <div class="bg-white/5 p-5 rounded-2xl border border-white/10">
-    <p class="font-bold text-lg mb-1">${f.q}</p>
-    <p class="text-gray-300 text-sm">${f.a}</p>
-  </div>
-`).join('');
-
-// ========== FEEDBACK ==========
-let selectedRating = 0;
-document.querySelectorAll('.rating-star').forEach(star => {
-  star.addEventListener('click', () => {
-    selectedRating = parseInt(star.dataset.val);
-    document.querySelectorAll('.rating-star').forEach(s => {
-      s.style.color = parseInt(s.dataset.val) <= selectedRating ? 'gold' : '#6B7280';
-    });
-  });
-});
-function submitFeedback() {
-  if (!selectedRating || !document.getElementById('feedback-text').value.trim()) {
-    showToast('⚠️ Please choose a star rating and leave a comment', 'error'); return;
-  }
-  showToast('✅ Thank you for rating us!', 'success');
-  document.getElementById('feedback-msg').classList.remove('hidden');
-  document.getElementById('feedback-text').value = '';
-}
-
-// ========== SMART AI CHATBOT ENGINE ==========
-function toggleChat() { document.getElementById('chat-box').classList.toggle('hidden'); }
-
-function getBotAnswer(query) {
-  const q = query.toLowerCase().trim();
-
-  // Delivery Time Questions
-  if (q.includes('time') || q.includes('fast') || q.includes('speed') || q.includes('how long') || q.includes('when') || q.includes('delay') || q.includes('deliver')) {
-    return "⚡ All data packages are delivered directly to your phone **within 5 minutes** of payment confirmation!";
-  }
-
-  // Pricing & Packages Questions
-  if (q.includes('price') || q.includes('cost') || q.includes('rate') || q.includes('1gb') || q.includes('2gb') || q.includes('5gb') || q.includes('10gb') || q.includes('cheap') || q.includes('package')) {
-    return "💰 Our data rates are super affordable:\n• **1GB**: ~GH₵5.00 - GH₵6.00\n• **5GB**: ~GH₵18.50 - GH₵22.00\n• **10GB**: ~GH₵32.00 - GH₵38.00\nClick on any network tab (MTN, Telecel, AirtelTigo) to see full prices!";
-  }
-
-  // How to Buy / Order Guide
-  if (q.includes('how to buy') || q.includes('how to order') || q.includes('buy data') || q.includes('steps') || q.includes('process')) {
-    return "📱 How to place an order:\n1. Type the recipient phone number in the input box.\n2. Click your network tab (MTN, AirtelTigo, or Telecel).\n3. Select your bundle & click 'Buy Bundle'.\n4. Enter your MoMo number & confirm PIN on your phone!";
-  }
-
-  // Payment & MoMo Questions
-  if (q.includes('pay') || q.includes('momo') || q.includes('payment') || q.includes('money') || q.includes('method') || q.includes('prompt')) {
-    return "💳 We support **MTN MoMo**, **Telecel Cash**, and **AirtelTigo Money**. You will receive an instant MoMo prompt on your mobile phone to approve the payment.";
-  }
-
-  // Tracking Orders
-  if (q.includes('track') || q.includes('status') || q.includes('where is my data') || q.includes('history') || q.includes('order status')) {
-    return "🔍 You can track your order status anytime!\nScroll down to the **Track Your Order** section, type in your phone number, and click 'Check Order History'.";
-  }
-
-  // Telegram & WhatsApp Community / Human Support
-  if (q.includes('telegram') || q.includes('whatsapp') || q.includes('support') || q.includes('human') || q.includes('contact') || q.includes('help') || q.includes('agent') || q.includes('channel')) {
-    return "💬 Need direct human support?\n• **Telegram Channel**: [t.me/godfreddatahub](https://t.me/godfreddatahub)\n• **WhatsApp Channel**: Join our official WhatsApp channel using the green button in the hero header!";
-  }
-
-  // Supported Networks
-  if (q.includes('network') || q.includes('mtn') || q.includes('telecel') || q.includes('airteltigo') || q.includes('vodafone')) {
-    return "📶 We support top-ups for **MTN**, **Telecel** (formerly Vodafone), and **AirtelTigo** across all regions in Ghana!";
-  }
-
-  // Greetings
-  if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('good morning') || q.includes('good afternoon') || q.includes('good evening')) {
-    return "👋 Hello! Welcome to Godfred Data Hub. How can I help you today? Ask me about delivery speed, package prices, tracking orders, or payment methods!";
-  }
-
-  // Default Guidance Response
-  return "🤖 I'm here to assist you! You can ask me:\n• 'How fast is delivery?'\n• 'What are the data prices?'\n• 'How do I pay with MoMo?'\n• 'How do I track my order?'\n• 'What is the Telegram channel?'";
-}
-
-function sendChat() {
-  const input = document.getElementById('chat-input');
-  const msg = input.value.trim();
-  if (!msg) return;
-
-  const container = document.getElementById('chat-messages');
-
-  const userDiv = document.createElement('div');
-  userDiv.className = 'text-right my-1.5';
-  userDiv.innerHTML = `<span class="inline-block bg-primary text-white text-xs sm:text-sm px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[85%] text-left shadow-md">${escapeHtml(msg)}</span>`;
-  container.appendChild(userDiv);
-
-  input.value = '';
-  container.scrollTop = container.scrollHeight;
-
-  setTimeout(() => {
-    const botReply = getBotAnswer(msg);
-    const botDiv = document.createElement('div');
-    botDiv.className = 'text-left my-1.5 animate-fade-up';
-    botDiv.innerHTML = `<span class="inline-block bg-white/10 border border-white/10 text-gray-200 text-xs sm:text-sm px-3.5 py-2.5 rounded-2xl rounded-tl-none max-w-[88%] text-left whitespace-pre-line shadow-md">${botReply}</span>`;
-    container.appendChild(botDiv);
-    container.scrollTop = container.scrollHeight;
-  }, 400);
-}
-
-function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.innerText = text;
-  return div.innerHTML;
-}
-
-// ========== SECRET ADMIN ACCESS HANDLERS ==========
-let logoClickCount = 0;
-let logoClickTimer = null;
-
-// Secret Method 1: Click "G" logo 5 times in quick succession
-function handleLogoClick(e) {
-  logoClickCount++;
-  clearTimeout(logoClickTimer);
-  
-  if (logoClickCount >= 5) {
-    e.preventDefault();
-    openAdmin();
-    logoClickCount = 0;
-    showToast('🔑 Secret Admin Access Triggered', 'info');
-  } else {
-    logoClickTimer = setTimeout(() => { logoClickCount = 0; }, 2000);
-  }
-}
-
-// Secret Method 2: Keyboard shortcut (Ctrl + Shift + A)
-document.addEventListener('keydown', function(e) {
-  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
-    e.preventDefault();
-    openAdmin();
-    showToast('🔑 Secret Admin Access Triggered', 'info');
-  }
-});
-
-// ========== ADMIN PORTAL FUNCTIONS ==========
-function openAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
-function closeAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
-
-function renderAdminPriceEditor() {
-  const container = document.getElementById('price-editor');
-  if (!container) return;
-
-  let html = '';
-  for (const net in packages) {
-    html += `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-      <h5 class="font-bold text-slate-800 uppercase mb-3">${net}</h5>`;
-    packages[net].forEach((pkg, idx) => {
-      html += `
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-xs font-bold w-16">${pkg.size}</span>
-          <input type="number" step="0.5" id="price-${net}-${idx}" value="${pkg.price}" 
-            class="w-full px-2 py-1 text-sm border rounded outline-none focus:border-emerald-500">
-        </div>`;
-    });
-    html += `</div>`;
-  }
-  container.innerHTML = html;
-}
-
-function saveAllPrices() {
-  for (const net in packages) {
-    packages[net].forEach((pkg, idx) => {
-      const input = document.getElementById(`price-${net}-${idx}`);
-      if (input) pkg.price = parseFloat(input.value).toFixed(2);
-    });
-  }
-  localStorage.setItem('gdhub_prices', JSON.stringify(packages));
-  renderPackages();
-  showToast('✅ Package prices updated successfully!', 'success');
-}
-
-function updateAdminStats() {
-  const salesCount = orders.length;
-  let totalRevenue = 0;
-
-  orders.forEach(o => {
-    const parts = o.package.split('— GH₵');
-    if (parts[1]) totalRevenue += parseFloat(parts[1]);
-  });
-
-  document.getElementById('adm-stat-sales').textContent = salesCount;
-  document.getElementById('adm-stat-packages').textContent = salesCount;
-  document.getElementById('adm-stat-profit').textContent = (totalRevenue * 0.15).toFixed(2);
-
-  const logContainer = document.getElementById('adm-recent-orders');
-  const allSalesContainer = document.getElementById('adm-all-sales');
-  
-  if (orders.length > 0) {
-    const orderLogsHtml = orders.map(o => `
-      <div class="py-2 border-b border-slate-100 flex justify-between items-center">
-        <div><strong>${o.number}</strong> (${o.network.toUpperCase()}) - ${o.package}</div>
-        <span class="text-xs text-slate-400">${o.delivered}</span>
-      </div>
-    `).join('');
-    if (logContainer) logContainer.innerHTML = orderLogsHtml;
-    if (allSalesContainer) allSalesContainer.innerHTML = orderLogsHtml;
-  }
-}
-
-function verifyAdmin() {
-  if (document.getElementById('admin-pass').value === CONFIG.adminPassword) {
-    document.getElementById('admin-login').classList.add('hidden');
-    document.getElementById('admin-panel').classList.remove('hidden');
-    renderAdminPriceEditor();
-    updateAdminStats();
-  } else {
-    showToast('❌ Incorrect admin password', 'error');
-  }
-}
-
-function switchAdminTab(tab) {
-  document.querySelectorAll('.adm-tab').forEach(t => t.classList.add('hidden'));
-  document.getElementById('adm-tab-' + tab).classList.remove('hidden');
-}
-
-// ========== AUTOLOAD PREFERENCES & SECRET URL CHECK ==========
-window.onload = function() {
-  const savedPhone = localStorage.getItem('gdhub_last_phone');
-  const savedNet = localStorage.getItem('gdhub_last_net') || 'mtn';
-
-  if (savedPhone) {
-    document.getElementById('buyer-number').value = savedPhone;
-    document.getElementById('track-number').value = savedPhone;
-    detectNetwork(savedPhone);
-    checkOrderStatus();
-  }
-
-  const btn = document.querySelector(`.tab-btn[data-network="${savedNet}"]`) || document.querySelector('.tab-btn');
-  if (btn) btn.click();
-
-  // Secret Method 3: Open admin via URL query parameter (?admin=true)
-  const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('admin') === 'true') {
-    openAdmin();
-  }
-};
-
-function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
-
-// 3D Canvas setup
-if (document.body.dataset.theme !== 'light') {
-  const container = document.getElementById('canvas-container');
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / 500, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setSize(window.innerWidth, 500);
-  if (container) {
-    container.appendChild(renderer.domElement);
-    const geometry = new THREE.BufferGeometry();
-    const count = 180;
-    const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 30;
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x165DFF, size: 0.12, transparent: true, opacity: 0.6 }));
-    scene.add(points);
-    camera.position.z = 10;
-    function animate() {
-      requestAnimationFrame(animate);
-      points.rotation.x += 0.0005; points.rotation.y += 0.001;
-      renderer.render(scene, camera);
-    }
-    animate();
-  }
-}
-</script>
-</body>
-</html>
+  { "name": "godfred-data-hub", "version": "1.0.0", "type": "module", "main": "server.js", "scripts": { "start": "node server.js" }, "engines": { "node": ">=18" }, "dependencies": { "express": "^4.19.2" } }
