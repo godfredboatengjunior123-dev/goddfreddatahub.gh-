@@ -633,92 +633,41 @@ const defaultPackages = {
   ]
 };
 
-// ==================== STATE & STORAGE MANAGEMENT ====================
-const STORAGE_KEYS = {
-  PRICES: 'gdhub_prices',
-  ORDERS: 'gdhub_orders'
-};
-
-// Safe JSON parser helper to prevent crashes from corrupted storage
-function safeJSONParse(key, fallbackValue) {
-  try {
-    const raw = localStorage.getItem(key);
-    return raw ? JSON.parse(raw) : fallbackValue;
-  } catch (error) {
-    console.error(`Error parsing ${key} from localStorage:`, error);
-    return fallbackValue;
-  }
-}
-
-// Initialize packages with fallback to deep clone of defaults
-let packages = safeJSONParse(
-  STORAGE_KEYS.PRICES, 
-  typeof structuredClone === 'function' 
-    ? structuredClone(defaultPackages) 
-    : JSON.parse(JSON.stringify(defaultPackages))
-);
-
+let saved = localStorage.getItem('gdhub_prices');
+let packages = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPackages));
 let activeNetwork = null;
+let orders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
 let currentPurchase = null;
-let orders = safeJSONParse(STORAGE_KEYS.ORDERS, []);
 
-// ==================== LEGAL POLICY MODAL FUNCTIONS ====================
-const POLICY_CONTENT = {
-  terms: {
-    title: 'Terms of Service',
-    body: `
-      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
-      <h4 class="font-bold text-white text-base mt-3">1. Overview</h4>
-      <p>Godfred Data Hub provides instant internet data bundle top-up services for major mobile networks in Ghana, including MTN, Telecel, and AirtelTigo. By placing an order on our platform, you agree to these terms.</p>
-      <h4 class="font-bold text-white text-base mt-3">2. Service Delivery & Fulfillment</h4>
-      <p>Data top-ups are processed upon successful payment confirmation through Mobile Money. Deliveries typically take between a few seconds and 15 minutes. During peak times or network delays, delivery may take longer.</p>
-      <h4 class="font-bold text-white text-base mt-3">3. User Responsibilities</h4>
-      <p>You are solely responsible for providing the correct recipient mobile phone number and selecting the corresponding network provider. Godfred Data Hub is not responsible for failed top-ups due to incorrect input.</p>
-    `
-  },
-  privacy: {
-    title: 'Privacy Policy',
-    body: `
-      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
-      <h4 class="font-bold text-white text-base mt-3">1. Information We Collect</h4>
-      <p>We collect essential operational details such as your phone number, network operator selection, and transaction logs necessary to complete data bundle top-ups.</p>
-      <h4 class="font-bold text-white text-base mt-3">2. How We Use Information</h4>
-      <p>Your details are used exclusively to fulfill orders, process payments, verify transactions, and provide customer support. We do not sell or share personal information with third parties except as needed to process network transactions.</p>
-    `
-  }
-};
-
+// ========== LEGAL POLICY MODAL FUNCTIONS ==========
 function openPolicyModal(type) {
   const modal = document.getElementById('policy-modal');
   const title = document.getElementById('policy-title');
   const content = document.getElementById('policy-content');
-
-  const policy = POLICY_CONTENT[type];
-  if (!policy || !modal || !title || !content) return;
-
-  title.textContent = policy.title;
-  content.innerHTML = policy.body;
-
-  modal.classList.remove('hidden');
-  modal.setAttribute('aria-hidden', 'false');
-
-  document.addEventListener('keydown', handleModalEscapeKey);
-}
-
-function closePolicyModal() {
-  const modal = document.getElementById('policy-modal');
-  if (!modal) return;
-
-  modal.classList.add('hidden');
-  modal.setAttribute('aria-hidden', 'true');
-  document.removeEventListener('keydown', handleModalEscapeKey);
-}
-
-function handleModalEscapeKey(e) {
-  if (e.key === 'Escape') {
-    closePolicyModal();
-  }
-}
+  
+  if (type === 'terms') {
+    title.innerText = '📜 Terms of Service';
+    content.innerHTML = `
+      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">1. Overview</h4>
+      <p>Godfred Data Hub provides instant internet data bundle top-up services for major mobile networks in Ghana, including MTN, Telecel, and AirtelTigo. By placing an order on our platform, you agree to these Terms of Service.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">2. Service Delivery & Fulfillment</h4>
+      <p>Data top-ups are processed automatically upon successful payment confirmation through Mobile Money. Deliveries typically take between a few seconds and 15 minutes. During peak times or network operator maintenance, delivery may experience minor delays.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">3. User Responsibilities</h4>
+      <p>You are solely responsible for providing the correct recipient mobile phone number and selecting the corresponding network provider. Godfred Data Hub is not responsible for failed top-ups or data sent to wrong numbers due to customer entry error.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">4. Pricing & Payments</h4>
+      <p>All prices are listed in Ghana Cedi (GH₵) and include applicable processing fees. Prices are subject to change without prior notice based on telecom operator tariff adjustments.</p>
+      
+      <h4 class="font-bold text-white text-base mt-3">5. Limitation of Liability</h4>
+      <p>Godfred Data Hub is a third-party data distributor and is not responsible for network outages, signal coverage issues, or data expiration rules set by MTN, Telecel, or AirtelTigo.</p>
+    `;
+  } else if (type === 'refund') {
+    title.innerText = '🔄 Refund & Cancellation Policy';
+    content.innerHTML = `
       <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
       
       <h4 class="font-bold text-white text-base mt-3">1. Digital Goods Exemption</h4>
