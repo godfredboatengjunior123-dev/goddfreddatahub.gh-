@@ -7,6 +7,8 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
+<!-- Paystack Inline SDK -->
+<script src="https://js.paystack.co/v1/inline.js"></script>
 <style>
 :root {
   --primary: #165DFF;
@@ -147,7 +149,7 @@ body {
 /* ================= LIGHT THEME OVERRIDES ================= */
 body[data-theme="light"] {
   background: #F3F5F4 !important;
-  color: #0F172A;
+  color: #0F172A !important;
 }
 body[data-theme="light"] #canvas-container { display: none; }
 body[data-theme="light"] nav {
@@ -230,7 +232,6 @@ tailwind.config = {
 <!-- Navigation -->
 <nav class="sticky top-0 z-50 bg-dark/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 animate-fade-up">
   <div class="max-w-7xl mx-auto flex justify-between items-center">
-    <!-- Secret Method 1: Tapping 'G' logo 5 times in quick succession triggers Admin Portal -->
     <a href="#" onclick="handleLogoClick(event)" class="flex items-center gap-2 select-none">
       <div class="w-10 h-10 rounded-full gradient-hero flex items-center justify-center font-bold text-xl animate-pulse-glow">G</div>
       <span class="font-bold text-xl logo-gradient">Godfred Data Hub</span>
@@ -270,7 +271,6 @@ tailwind.config = {
 <!-- Hero Section -->
 <header class="section min-h-[85vh] flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto px-6 py-12 gap-8">
   <div class="flex-1 text-center md:text-left">
-    <!-- Speed Badge -->
     <div class="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 px-4 py-1.5 rounded-full text-xs font-semibold text-emerald-400 mb-6 animate-fade-up">
       <span class="relative flex h-2 w-2">
         <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
@@ -305,7 +305,6 @@ tailwind.config = {
     </div>
   </div>
 
-  <!-- Hero Mascot / Visual SVG Graphic -->
   <div class="flex-1 flex justify-center items-center animate-float relative">
     <div class="absolute w-72 h-72 bg-primary/20 rounded-full blur-3xl -z-10"></div>
     <svg viewBox="0 0 320 320" class="w-72 h-72 md:w-96 md:h-96 filter drop-shadow-2xl">
@@ -341,7 +340,6 @@ tailwind.config = {
   <h2 class="text-3xl font-bold text-center mb-2 animate-fade-up">📦 Choose Your Network</h2>
   <p class="text-center text-gray-400 mb-10 animate-fade-up">Select a network to unlock instant bundles</p>
   
-  <!-- Network Tabs -->
   <div class="flex flex-wrap justify-center gap-4 mb-8 animate-fade-up">
     <button class="tab-btn px-8 py-4 rounded-full bg-white/10 text-lg font-medium flex items-center gap-2" data-network="mtn">
       <span class="w-3 h-3 rounded-full bg-yellow-400"></span> MTN
@@ -354,7 +352,6 @@ tailwind.config = {
     </button>
   </div>
 
-  <!-- Phone Input Card -->
   <div class="max-w-md mx-auto mb-10 bg-white/5 p-5 rounded-2xl border border-white/10 animate-fade-up shadow-xl">
     <label class="block text-xs font-semibold uppercase tracking-wider text-gray-300 mb-2">Recipient Phone Number</label>
     <div class="flex gap-2">
@@ -365,7 +362,6 @@ tailwind.config = {
     </div>
   </div>
 
-  <!-- Packages Container -->
   <div id="packages-container" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-4 gap-5">
     <p class="col-span-full text-center text-gray-400 py-10 animate-fade-scale">👆 Select a network above to view packages</p>
   </div>
@@ -471,7 +467,7 @@ tailwind.config = {
 <div id="payment-modal" class="hidden modal-backdrop">
   <div class="bg-dark border border-white/10 rounded-2xl max-w-md w-full p-6 animate-fade-scale shadow-2xl">
     <div class="flex justify-between items-center mb-5">
-      <h3 class="text-xl font-bold flex items-center gap-2">💳 MoMo Checkout</h3>
+      <h3 class="text-xl font-bold flex items-center gap-2">💳 Checkout</h3>
       <button onclick="closePaymentModal()" class="text-gray-400 hover:text-white text-xl">&times;</button>
     </div>
     
@@ -483,48 +479,18 @@ tailwind.config = {
         <p class="text-2xl font-bold text-secondary mt-2">GH₵ <span id="pay-amount"></span></p>
       </div>
       
-      <p class="mb-2 font-semibold text-xs text-gray-400 uppercase tracking-wider">Select Payment Network</p>
-      <div class="space-y-2 mb-5">
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-yellow-400 transition-all">
-          <input type="radio" name="momo-method" value="mtn" checked class="accent-primary">
-          <span class="font-bold text-yellow-400">MTN MoMo</span>
-        </label>
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-red-400 transition-all">
-          <input type="radio" name="momo-method" value="airteltigo" class="accent-primary">
-          <span class="font-bold text-red-400">AirtelTigo Money</span>
-        </label>
-        <label class="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10 cursor-pointer hover:border-green-400 transition-all">
-          <input type="radio" name="momo-method" value="telecel" class="accent-primary">
-          <span class="font-bold text-green-400">Telecel Cash</span>
-        </label>
-      </div>
-      
       <label class="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Your MoMo Paying Number</label>
       <input type="tel" id="momo-number" placeholder="054XXXXXXX" 
         class="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/20 mb-5 focus:border-primary outline-none transition-colors">
       
       <button onclick="initiatePayment()" class="w-full bg-secondary hover:bg-secondary/90 text-slate-900 font-bold py-3.5 rounded-xl transition-all hover:scale-[1.01] shadow-xl">
-        ⚡ Confirm &amp; Pay
+        ⚡ Pay with Paystack
       </button>
-    </div>
-    
-    <div id="pay-step-2" class="hidden text-center py-6">
-      <div class="text-5xl mb-4 animate-bounce">📲</div>
-      <h4 class="text-xl font-bold mb-2">Prompt Sent to Phone</h4>
-      <p class="text-sm text-gray-400 mb-5">Check your phone screen and enter your MoMo PIN to authorize payment.</p>
-      <div class="bg-white/5 p-4 rounded-xl mb-5 border border-white/10">
-        <p class="text-sm">Amount: <span class="font-bold text-secondary">GH₵ <span id="confirm-amount"></span></span></p>
-        <p class="text-xs text-gray-400 mt-1">Ref: <span id="confirm-ref"></span></p>
-      </div>
-      <button onclick="verifyPayment()" id="verify-btn" class="w-full bg-primary hover:bg-primary/90 font-bold py-3.5 rounded-xl mb-3 transition-all shadow-xl">
-        ✅ I Have Paid / Confirm
-      </button>
-      <p id="payment-status" class="text-xs text-gray-400">Waiting for MoMo confirmation...</p>
     </div>
   </div>
 </div>
 
-<!-- Admin Portal (Hidden by default, opened via secret triggers) -->
+<!-- Admin Portal -->
 <div id="admin-modal" class="hidden modal-backdrop p-0 items-stretch justify-start z-[999]">
   <div class="flex w-full h-full bg-slate-50 text-slate-800 overflow-hidden">
     <aside class="w-64 bg-white border-r border-slate-200 p-6 flex-shrink-0 hidden sm:flex flex-col justify-between">
@@ -593,6 +559,7 @@ tailwind.config = {
 // ========== CONFIG ==========
 const CONFIG = {
   adminPassword: "godfred123",
+  paystackPublicKey: "pk_live_b4f9f32059972b8a1b85cbfde64d988b9deb3f43", // Replace with your Paystack Public Key
   momoApiUrl: "https://api.techlink.com.gh/v1/payment/charge"
 };
 
@@ -873,7 +840,7 @@ function detectNetwork(num) {
   return net;
 }
 
-// ========== PURCHASE FLOW ==========
+// ========== PURCHASE & PAYSTACK INTEGRATION FLOW ==========
 function startPurchase(net, idx) {
   const number = document.getElementById('buyer-number').value.trim();
   if (!number || number.length < 9) {
@@ -892,8 +859,6 @@ function startPurchase(net, idx) {
   document.getElementById('momo-number').value = number;
   
   document.getElementById('payment-modal').classList.remove('hidden');
-  document.getElementById('pay-step-1').classList.remove('hidden');
-  document.getElementById('pay-step-2').classList.add('hidden');
 }
 
 function closePaymentModal() {
@@ -908,39 +873,52 @@ function initiatePayment() {
     return;
   }
 
-  document.getElementById('pay-step-1').classList.add('hidden');
-  document.getElementById('pay-step-2').classList.remove('hidden');
-  document.getElementById('confirm-amount').textContent = currentPurchase.package.price;
-  document.getElementById('confirm-ref').textContent = currentPurchase.orderId;
+  const amountInPesewas = Math.round(parseFloat(currentPurchase.package.price) * 100);
+
+  const handler = PaystackPop.setup({
+    key: CONFIG.paystackPublicKey,
+    email: `${momoNumber}@godfreddatahub.com`,
+    amount: amountInPesewas,
+    currency: 'GHS',
+    ref: currentPurchase.orderId,
+    metadata: {
+      custom_fields: [
+        { display_name: "Recipient Phone", variable_name: "recipient_phone", value: currentPurchase.phone },
+        { display_name: "Network", variable_name: "network", value: currentPurchase.network },
+        { display_name: "Package Size", variable_name: "package_size", value: currentPurchase.package.size }
+      ]
+    },
+    callback: function(response) {
+      verifyPayment(response.reference);
+    },
+    onClose: function() {
+      showToast('❌ Payment window closed', 'error');
+    }
+  });
+
+  handler.openIframe();
 }
 
-function verifyPayment() {
-  const btn = document.getElementById('verify-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Confirming Payment...';
+function verifyPayment(reference) {
+  const order = {
+    id: reference || currentPurchase.orderId,
+    network: currentPurchase.network,
+    number: currentPurchase.phone,
+    package: `${currentPurchase.package.size} — GH₵${currentPurchase.package.price}`,
+    ordered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+    delivered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
+    status: 'delivered'
+  };
 
-  setTimeout(() => {
-    const order = {
-      id: currentPurchase.orderId,
-      network: currentPurchase.network,
-      number: currentPurchase.phone,
-      package: `${currentPurchase.package.size} — GH₵${currentPurchase.package.price}`,
-      ordered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      delivered: new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}),
-      status: 'delivered'
-    };
-    orders.unshift(order);
-    localStorage.setItem('gdhub_orders', JSON.stringify(orders));
-    
-    tickerItems.unshift(`${order.number.substring(0,3)}***${order.number.slice(-2)} bought ${currentPurchase.package.size} ${currentPurchase.network.toUpperCase()} · Just now`);
-    
-    triggerConfetti();
-    showToast(`✅ Delivered! ${currentPurchase.package.size} sent to ${currentPurchase.phone}`, 'success');
-    showPurchaseAlert(order);
-    closePaymentModal();
-    btn.disabled = false;
-    btn.textContent = '✅ I Have Paid / Confirm';
-  }, 1200);
+  orders.unshift(order);
+  localStorage.setItem('gdhub_orders', JSON.stringify(orders));
+
+  tickerItems.unshift(`${order.number.substring(0,3)}***${order.number.slice(-2)} bought ${currentPurchase.package.size} ${currentPurchase.network.toUpperCase()} · Just now`);
+
+  triggerConfetti();
+  showToast(`✅ Payment Successful! ${currentPurchase.package.size} sent to ${currentPurchase.phone}`, 'success');
+  showPurchaseAlert(order);
+  closePaymentModal();
 }
 
 function showPurchaseAlert(order) {
@@ -983,7 +961,7 @@ function checkOrderStatus() {
 // ========== FAQ ==========
 const faqs = [
   {q: "How fast is delivery?", a: "Data is delivered automatically via direct network integration within 5 minutes of payment."},
-  {q: "Which MoMo networks are supported?", a: "MTN MoMo, Telecel Cash, and AirtelTigo Money are all fully supported."},
+  {q: "Which MoMo networks are supported?", a: "MTN MoMo, Telecel Cash, and AirtelTigo Money are all fully supported via Paystack checkout."},
   {q: "Can I buy for another person?", a: "Yes! Simply enter the recipient's phone number in the number box before clicking Buy."}
 ];
 document.getElementById('faq-container').innerHTML = faqs.map((f, i) => `
@@ -1018,47 +996,38 @@ function toggleChat() { document.getElementById('chat-box').classList.toggle('hi
 function getBotAnswer(query) {
   const q = query.toLowerCase().trim();
 
-  // Delivery Time Questions
   if (q.includes('time') || q.includes('fast') || q.includes('speed') || q.includes('how long') || q.includes('when') || q.includes('delay') || q.includes('deliver')) {
     return "⚡ All data packages are delivered directly to your phone **within 5 minutes** of payment confirmation!";
   }
 
-  // Pricing & Packages Questions
   if (q.includes('price') || q.includes('cost') || q.includes('rate') || q.includes('1gb') || q.includes('2gb') || q.includes('5gb') || q.includes('10gb') || q.includes('cheap') || q.includes('package')) {
     return "💰 Our data rates are super affordable:\n• **1GB**: ~GH₵5.00 - GH₵6.00\n• **5GB**: ~GH₵18.50 - GH₵22.00\n• **10GB**: ~GH₵32.00 - GH₵38.00\nClick on any network tab (MTN, Telecel, AirtelTigo) to see full prices!";
   }
 
-  // How to Buy / Order Guide
   if (q.includes('how to buy') || q.includes('how to order') || q.includes('buy data') || q.includes('steps') || q.includes('process')) {
-    return "📱 How to place an order:\n1. Type the recipient phone number in the input box.\n2. Click your network tab (MTN, AirtelTigo, or Telecel).\n3. Select your bundle & click 'Buy Bundle'.\n4. Enter your MoMo number & confirm PIN on your phone!";
+    return "📱 How to place an order:\n1. Type the recipient phone number in the input box.\n2. Click your network tab (MTN, AirtelTigo, or Telecel).\n3. Select your bundle & click 'Buy Bundle'.\n4. Enter your MoMo number & authorize payment on the Paystack screen!";
   }
 
-  // Payment & MoMo Questions
   if (q.includes('pay') || q.includes('momo') || q.includes('payment') || q.includes('money') || q.includes('method') || q.includes('prompt')) {
-    return "💳 We support **MTN MoMo**, **Telecel Cash**, and **AirtelTigo Money**. You will receive an instant MoMo prompt on your mobile phone to approve the payment.";
+    return "💳 We support **MTN MoMo**, **Telecel Cash**, and **AirtelTigo Money** processed securely via Paystack.";
   }
 
-  // Tracking Orders
   if (q.includes('track') || q.includes('status') || q.includes('where is my data') || q.includes('history') || q.includes('order status')) {
     return "🔍 You can track your order status anytime!\nScroll down to the **Track Your Order** section, type in your phone number, and click 'Check Order History'.";
   }
 
-  // Telegram & WhatsApp Community / Human Support
   if (q.includes('telegram') || q.includes('whatsapp') || q.includes('support') || q.includes('human') || q.includes('contact') || q.includes('help') || q.includes('agent') || q.includes('channel')) {
     return "💬 Need direct human support?\n• **Telegram Channel**: [t.me/godfreddatahub](https://t.me/godfreddatahub)\n• **WhatsApp Channel**: Join our official WhatsApp channel using the green button in the hero header!";
   }
 
-  // Supported Networks
   if (q.includes('network') || q.includes('mtn') || q.includes('telecel') || q.includes('airteltigo') || q.includes('vodafone')) {
     return "📶 We support top-ups for **MTN**, **Telecel** (formerly Vodafone), and **AirtelTigo** across all regions in Ghana!";
   }
 
-  // Greetings
   if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('good morning') || q.includes('good afternoon') || q.includes('good evening')) {
     return "👋 Hello! Welcome to Godfred Data Hub. How can I help you today? Ask me about delivery speed, package prices, tracking orders, or payment methods!";
   }
 
-  // Default Guidance Response
   return "🤖 I'm here to assist you! You can ask me:\n• 'How fast is delivery?'\n• 'What are the data prices?'\n• 'How do I pay with MoMo?'\n• 'How do I track my order?'\n• 'What is the Telegram channel?'";
 }
 
@@ -1097,7 +1066,6 @@ function escapeHtml(text) {
 let logoClickCount = 0;
 let logoClickTimer = null;
 
-// Secret Method 1: Click "G" logo 5 times in quick succession
 function handleLogoClick(e) {
   logoClickCount++;
   clearTimeout(logoClickTimer);
@@ -1112,7 +1080,6 @@ function handleLogoClick(e) {
   }
 }
 
-// Secret Method 2: Keyboard shortcut (Ctrl + Shift + A)
 document.addEventListener('keydown', function(e) {
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
     e.preventDefault();
@@ -1217,7 +1184,6 @@ window.onload = function() {
   const btn = document.querySelector(`.tab-btn[data-network="${savedNet}"]`) || document.querySelector('.tab-btn');
   if (btn) btn.click();
 
-  // Secret Method 3: Open admin via URL query parameter (?admin=true)
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('admin') === 'true') {
     openAdmin();
