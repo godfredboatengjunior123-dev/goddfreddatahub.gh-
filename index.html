@@ -233,7 +233,7 @@ tailwind.config = {
 <nav class="sticky top-0 z-50 bg-dark/80 backdrop-blur-xl border-b border-white/10 px-4 py-3 animate-fade-up">
   <div class="max-w-7xl mx-auto flex justify-between items-center">
     <a href="#" onclick="handleLogoClick(event)" class="flex items-center gap-2 select-none">
-      <div class="w-10 h-10 rounded-full gradient-hero flex items-center justify-center font-bold text-xl animate-pulse-glow">G</div>
+      <div class="w-10 h-10 rounded-full gradient-hero flex items-center justify-center font-bold text-xl animate-pulse-glow text-white">G</div>
       <span class="font-bold text-xl logo-gradient">Godfred Data Hub</span>
     </a>
     <div class="hidden md:flex gap-6 text-sm">
@@ -288,17 +288,17 @@ tailwind.config = {
     </p>
     
     <div class="flex flex-wrap justify-center md:justify-start gap-3 animate-fade-up">
-      <a href="#packages" class="gradient-hero px-7 py-3.5 rounded-full text-base font-semibold transition-all hover:scale-105 animate-pulse-glow flex items-center gap-2 shadow-xl">
+      <a href="#packages" class="gradient-hero px-7 py-3.5 rounded-full text-base font-semibold transition-all hover:scale-105 animate-pulse-glow flex items-center gap-2 shadow-xl text-white">
         Buy Data Now 
         <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14"/><path d="M6 13l6 6 6-6"/></svg>
       </a>
       <a href="https://whatsapp.com/channel/0029VbEYidXGpLHS9AxCAO2D" target="_blank" 
-         class="bg-green-600/80 hover:bg-green-600 px-5 py-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 border border-green-400/30">
+         class="bg-green-600/80 hover:bg-green-600 px-5 py-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 border border-green-400/30 text-white">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M17.6 6.32A8.86 8.86 0 0 0 11.9 4C7 4 3 8 3 12.9c0 1.6.42 3.13 1.22 4.47L3 21l3.73-1.18A8.9 8.9 0 0 0 11.9 21.8c4.9 0 8.9-4 8.9-8.9a8.86 8.86 0 0 0-3.2-6.58zm-5.7 13.7a7.4 7.4 0 0 1-3.77-1.03l-.27-.16-2.24.71.72-2.18-.18-.28a7.4 7.4 0 0 1-1.14-3.96c0-4.1 3.34-7.44 7.44-7.44a7.4 7.4 0 0 1 5.26 2.18 7.4 7.4 0 0 1 2.18 5.26c0 4.1-3.34 7.44-7.44 7.44zm4.08-5.58c-.22-.11-1.32-.65-1.53-.72-.2-.08-.35-.11-.5.11-.15.22-.57.72-.7.87-.13.15-.26.17-.48.06-.22-.11-.94-.35-1.8-1.11-.66-.6-1.11-1.33-1.24-1.55-.13-.22-.01-.34.1-.45.1-.1.22-.26.33-.4.11-.13.15-.22.22-.37.07-.15.04-.28-.02-.4-.06-.11-.5-1.2-.68-1.65-.18-.43-.36-.37-.5-.38h-.43c-.15 0-.4.06-.6.28-.2.22-.8.78-.8 1.9 0 1.12.82 2.2.93 2.35.11.15 1.6 2.44 3.87 3.42.54.23.96.37 1.29.48.54.17 1.03.15 1.42.09.43-.06 1.32-.54 1.51-1.06.19-.52.19-.96.13-1.06-.05-.1-.2-.16-.42-.27z"/></svg>
         WhatsApp
       </a>
       <a href="https://t.me/godfreddatahub" target="_blank" 
-         class="bg-sky-600/80 hover:bg-sky-600 px-5 py-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 border border-sky-400/30">
+         class="bg-sky-600/80 hover:bg-sky-600 px-5 py-3.5 rounded-full flex items-center gap-2 text-sm font-semibold transition-all hover:scale-105 border border-sky-400/30 text-white">
         <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.03.01-.14-.07-.2-.08-.06-.19-.04-.27-.02-.12.02-1.96 1.25-5.54 3.69-.52.36-1 .53-1.42.52-.47-.01-1.37-.26-2.03-.48-.82-.27-1.47-.42-1.42-.88.03-.24.38-.49 1.07-.75 4.19-1.82 6.98-3.02 8.38-3.6 3.98-1.65 4.81-1.94 5.35-1.95.12 0 .38.03.55.17.14.12.18.28.2.46-.02.07-.02.14-.03.22z"/></svg>
         Telegram
       </a>
@@ -375,7 +375,7 @@ tailwind.config = {
     <input type="tel" id="track-number" placeholder="Enter phone number" 
       class="w-full px-4 py-3.5 rounded-xl bg-white/10 border border-white/20 mb-4 focus:border-primary outline-none transition-colors"
       onkeyup="checkOrderStatus()">
-    <button onclick="checkOrderStatus()" class="w-full bg-primary hover:bg-primary/90 py-3.5 rounded-xl font-bold transition-all hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2">
+    <button onclick="checkOrderStatus()" class="w-full bg-primary hover:bg-primary/90 py-3.5 rounded-xl font-bold transition-all hover:scale-[1.01] shadow-lg flex items-center justify-center gap-2 text-white">
       <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> Check Order History
     </button>
     <div id="track-result" class="mt-5 hidden animate-fade-scale"></div>
@@ -423,6 +423,8 @@ tailwind.config = {
     <button onclick="openPolicyModal('refund')" class="hover:text-white hover:underline transition-colors">Refund & Cancellation Policy</button>
     <span>•</span>
     <button onclick="openPolicyModal('privacy')" class="hover:text-white hover:underline transition-colors">Privacy Policy</button>
+    <span>•</span>
+    <button onclick="openAdmin()" class="text-emerald-400 hover:text-emerald-300 font-semibold hover:underline transition-colors">⚙️ Admin Portal</button>
   </div>
 </footer>
 
@@ -434,7 +436,7 @@ tailwind.config = {
     </svg>
   </button>
   <div id="chat-box" class="hidden absolute bottom-16 left-0 w-80 sm:w-96 bg-dark border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-fade-scale">
-    <div class="bg-primary/20 px-4 py-3 font-bold border-b border-white/10 flex justify-between items-center">
+    <div class="bg-primary/20 px-4 py-3 font-bold border-b border-white/10 flex justify-between items-center text-white">
       <span class="flex items-center gap-2">🤖 Godfred AI Assistant <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span></span>
       <button onclick="toggleChat()" class="text-gray-400 hover:text-white text-lg">&times;</button>
     </div>
@@ -512,73 +514,215 @@ tailwind.config = {
         <p class="text-sm">Amount Paid: <span class="font-bold text-secondary">GH₵ <span id="confirm-amount"></span></span></p>
         <p class="text-xs text-gray-400 mt-1">Paystack Ref: <span id="confirm-ref"></span></p>
       </div>
-      <button onclick="closePaymentModal()" class="w-full bg-primary hover:bg-primary/90 font-bold py-3.5 rounded-xl mb-3 transition-all shadow-xl">
+      <button onclick="closePaymentModal()" class="w-full bg-primary hover:bg-primary/90 font-bold py-3.5 rounded-xl mb-3 transition-all shadow-xl text-white">
         Done
       </button>
     </div>
   </div>
 </div>
 
-<!-- Admin Portal -->
+<!-- Complete Admin Portal Modal -->
 <div id="admin-modal" class="hidden modal-backdrop p-0 items-stretch justify-start z-[999]">
-  <div class="flex w-full h-full bg-slate-50 text-slate-800 overflow-hidden">
-    <aside class="w-64 bg-white border-r border-slate-200 p-6 flex-shrink-0 hidden sm:flex flex-col justify-between">
+  <div class="flex w-full h-full bg-slate-100 text-slate-800 overflow-hidden">
+    <!-- Admin Sidebar -->
+    <aside class="w-64 bg-slate-900 border-r border-slate-800 p-6 flex-shrink-0 hidden sm:flex flex-col justify-between text-white">
       <div>
-        <div class="flex items-center gap-2 mb-8">
-          <div class="w-9 h-9 rounded-xl gradient-hero flex items-center justify-center text-white font-bold">G</div>
-          <span class="font-bold text-lg text-emerald-800">Admin Portal</span>
+        <div class="flex items-center gap-3 mb-8">
+          <div class="w-10 h-10 rounded-xl gradient-hero flex items-center justify-center font-bold text-white text-lg">G</div>
+          <div>
+            <h1 class="font-bold text-base leading-none text-white">Godfred Admin</h1>
+            <span class="text-[10px] text-emerald-400 font-semibold tracking-wider uppercase">Management Hub</span>
+          </div>
         </div>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Navigation</p>
-        <nav class="space-y-1">
-          <div class="p-3 rounded-xl bg-emerald-50 text-emerald-700 font-bold cursor-pointer" onclick="switchAdminTab('dashboard')">Dashboard</div>
-          <div class="p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600" onclick="switchAdminTab('packages')">Data Packages</div>
-          <div class="p-3 rounded-xl hover:bg-slate-100 font-semibold cursor-pointer text-slate-600" onclick="switchAdminTab('sales')">Sales &amp; Orders</div>
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-3">Navigation</p>
+        <nav class="space-y-1.5 text-sm">
+          <div class="adm-nav-btn p-3 rounded-xl bg-emerald-600/20 text-emerald-400 font-bold cursor-pointer hover:bg-emerald-600/30 transition-all flex items-center gap-2" onclick="switchAdminTab('dashboard')">
+            📊 Overview & Profit
+          </div>
+          <div class="adm-nav-btn p-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold cursor-pointer transition-all flex items-center gap-2" onclick="switchAdminTab('packages')">
+            🏷️ Edit Prices & Packages
+          </div>
+          <div class="adm-nav-btn p-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold cursor-pointer transition-all flex items-center gap-2" onclick="switchAdminTab('engagement')">
+            📈 Engagement & Traffic
+          </div>
+          <div class="adm-nav-btn p-3 rounded-xl text-slate-300 hover:bg-slate-800 font-semibold cursor-pointer transition-all flex items-center gap-2" onclick="switchAdminTab('sales')">
+            📜 Sales & Transactions
+          </div>
         </nav>
       </div>
-      <button onclick="closeAdmin()" class="w-full py-2.5 rounded-xl bg-slate-100 font-bold text-slate-600 hover:bg-slate-200">Close Portal</button>
+      <button onclick="closeAdmin()" class="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 font-bold text-slate-300 text-xs transition-all border border-slate-700">
+        🚪 Exit Admin Portal
+      </button>
     </aside>
+
+    <!-- Main Content Area -->
     <main class="flex-1 overflow-y-auto p-6 sm:p-10">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-2xl font-bold text-slate-900" id="admin-page-title">⚙️ Admin Control Center</h2>
-        <button onclick="closeAdmin()" class="text-slate-400 hover:text-slate-700 text-2xl">&times;</button>
+      <div class="flex justify-between items-center mb-6 border-b border-slate-200 pb-4">
+        <div>
+          <h2 class="text-2xl font-bold text-slate-900" id="admin-page-title">⚙️ Admin Control Center</h2>
+          <p class="text-xs text-slate-500">Manage package prices, track profits, and monitor website traffic.</p>
+        </div>
+        <button onclick="closeAdmin()" class="text-slate-400 hover:text-slate-700 text-3xl font-bold">&times;</button>
       </div>
 
+      <!-- Login View -->
       <div id="admin-login" class="flex items-center justify-center min-h-[50vh]">
-        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-slate-100">
-          <h3 class="text-xl font-bold mb-2">Admin Sign In</h3>
-          <p class="text-sm text-slate-500 mb-5">Enter your administrative passcode</p>
+        <div class="bg-white p-8 rounded-2xl shadow-xl max-w-sm w-full border border-slate-200 text-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 font-bold text-2xl flex items-center justify-center mx-auto mb-4">🔐</div>
+          <h3 class="text-xl font-bold mb-1 text-slate-800">Admin Sign In</h3>
+          <p class="text-xs text-slate-500 mb-6">Enter passcode to unlock admin controls</p>
           <input type="password" id="admin-pass" placeholder="Enter password" 
-            class="w-full px-4 py-3 rounded-xl border border-slate-200 mb-4 outline-none focus:border-emerald-500">
-          <button onclick="verifyAdmin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg">Sign In</button>
+            class="w-full px-4 py-3 rounded-xl border border-slate-300 mb-4 outline-none focus:border-emerald-500 text-center text-slate-800"
+            onkeydown="if(event.key==='Enter')verifyAdmin()">
+          <button onclick="verifyAdmin()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 rounded-xl shadow-lg transition-all">Sign In</button>
         </div>
       </div>
 
-      <div id="admin-panel" class="hidden">
+      <!-- Admin Panel View -->
+      <div id="admin-panel" class="hidden space-y-6">
+        
+        <!-- TAB 1: DASHBOARD & PROFITS -->
         <div id="adm-tab-dashboard" class="adm-tab active">
-          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-            <div class="bg-emerald-600 text-white p-5 rounded-2xl shadow-md"><p class="text-xs opacity-80 uppercase">Today's Sales</p><p class="text-3xl font-bold mt-1" id="adm-stat-sales">0</p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Estimated Profit</p><p class="text-3xl font-bold text-emerald-600 mt-1">GH₵<span id="adm-stat-profit">0.00</span></p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Bundles Delivered</p><p class="text-3xl font-bold text-slate-800 mt-1" id="adm-stat-packages">0</p></div>
-            <div class="bg-white p-5 rounded-2xl border border-slate-200"><p class="text-xs text-slate-400 uppercase font-bold">Total Visits</p><p class="text-3xl font-bold text-slate-800 mt-1" id="adm-stat-visitors">0</p></div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <div class="bg-gradient-to-br from-emerald-600 to-emerald-800 text-white p-5 rounded-2xl shadow-md">
+              <p class="text-xs opacity-80 uppercase font-bold tracking-wider">Total Sales Count</p>
+              <p class="text-3xl font-black mt-1" id="adm-stat-sales">0</p>
+              <p class="text-[11px] opacity-75 mt-1">Successful Orders</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Revenue</p>
+              <p class="text-3xl font-black text-slate-900 mt-1">GH₵<span id="adm-stat-revenue">0.00</span></p>
+              <p class="text-[11px] text-slate-500 mt-1">Gross sales collected</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-emerald-300 bg-emerald-50/50 shadow-sm">
+              <p class="text-xs text-emerald-600 uppercase font-bold tracking-wider">Estimated Profit</p>
+              <p class="text-3xl font-black text-emerald-600 mt-1">GH₵<span id="adm-stat-profit">0.00</span></p>
+              <p class="text-[11px] text-emerald-700 font-semibold mt-1">Margin: <span id="adm-stat-margin">0</span>%</p>
+            </div>
+            <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm">
+              <p class="text-xs text-slate-400 uppercase font-bold tracking-wider">Total Page Visits</p>
+              <p class="text-3xl font-black text-slate-800 mt-1" id="adm-stat-visitors">0</p>
+              <p class="text-[11px] text-slate-500 mt-1">Unique page sessions</p>
+            </div>
           </div>
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Recent Transactions</h4>
-            <div id="adm-recent-orders" class="text-sm text-slate-600">No recent orders yet.</div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <h4 class="font-bold text-slate-800 mb-4 flex items-center justify-between">
+                <span>⚡ Recent Transactions Log</span>
+                <span class="text-xs font-normal text-slate-500">Live updating</span>
+              </h4>
+              <div id="adm-recent-orders" class="text-sm text-slate-600 space-y-2">No recent orders yet.</div>
+            </div>
+
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+              <div>
+                <h4 class="font-bold text-slate-800 mb-4">📶 Sales by Network</h4>
+                <div class="space-y-4 text-sm">
+                  <div>
+                    <div class="flex justify-between font-semibold mb-1">
+                      <span>MTN Ghana</span>
+                      <span id="net-count-mtn">0 sales</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div id="net-bar-mtn" class="bg-yellow-400 h-full w-0 transition-all"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between font-semibold mb-1">
+                      <span>Telecel</span>
+                      <span id="net-count-telecel">0 sales</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div id="net-bar-telecel" class="bg-emerald-500 h-full w-0 transition-all"></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="flex justify-between font-semibold mb-1">
+                      <span>AirtelTigo</span>
+                      <span id="net-count-airteltigo">0 sales</span>
+                    </div>
+                    <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                      <div id="net-bar-airteltigo" class="bg-red-500 h-full w-0 transition-all"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <button onclick="clearAllData()" class="mt-6 text-xs text-red-500 hover:text-red-700 underline text-left">
+                ⚠️ Reset All Store Data & Logs
+              </button>
+            </div>
           </div>
         </div>
+
+        <!-- TAB 2: PACKAGES & PRICES EDITOR -->
         <div id="adm-tab-packages" class="adm-tab hidden">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Edit Package Prices</h4>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <div class="flex flex-wrap justify-between items-center mb-6 gap-2">
+              <div>
+                <h4 class="font-bold text-lg text-slate-900">🏷️ Data Package Price Management</h4>
+                <p class="text-xs text-slate-500">Edit consumer prices and wholesale costs for each network bundle.</p>
+              </div>
+              <button onclick="saveAllPrices()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-6 py-2.5 rounded-xl shadow-md transition-all text-sm">
+                💾 Save All Price Changes
+              </button>
+            </div>
+            
             <div id="price-editor" class="grid grid-cols-1 md:grid-cols-3 gap-6"></div>
-            <button onclick="saveAllPrices()" class="mt-6 bg-emerald-600 text-white font-bold px-6 py-3 rounded-xl shadow-md hover:bg-emerald-700 transition-all">Save All Changes</button>
           </div>
         </div>
+
+        <!-- TAB 3: ENGAGEMENT & TRAFFIC -->
+        <div id="adm-tab-engagement" class="adm-tab hidden">
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <p class="text-xs text-slate-400 font-bold uppercase">Total Page Views</p>
+              <p class="text-4xl font-black text-slate-900 mt-2" id="eng-page-views">0</p>
+              <p class="text-xs text-slate-500 mt-2">Times visitors loaded your site</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <p class="text-xs text-slate-400 font-bold uppercase">Chatbot Queries</p>
+              <p class="text-4xl font-black text-primary mt-2" id="eng-chat-count">0</p>
+              <p class="text-xs text-slate-500 mt-2">Interactions with AI assistant</p>
+            </div>
+            <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+              <p class="text-xs text-slate-400 font-bold uppercase">Conversion Rate</p>
+              <p class="text-4xl font-black text-emerald-600 mt-2"><span id="eng-conversion-rate">0</span>%</p>
+              <p class="text-xs text-slate-500 mt-2">Visitors who bought data</p>
+            </div>
+          </div>
+
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 class="font-bold text-slate-900 mb-4">💡 Website Growth & Engagement Summary</h4>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <p class="text-xs text-slate-500 font-bold">Feedback Ratings</p>
+                <p class="text-2xl font-bold text-amber-500 mt-1" id="eng-feedback-count">0</p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <p class="text-xs text-slate-500 font-bold">Most Popular Network</p>
+                <p class="text-2xl font-bold text-slate-800 mt-1" id="eng-top-net">MTN</p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <p class="text-xs text-slate-500 font-bold">Active Store Status</p>
+                <p class="text-2xl font-bold text-emerald-600 mt-1">ONLINE</p>
+              </div>
+              <div class="p-4 rounded-xl bg-slate-50 border border-slate-200">
+                <p class="text-xs text-slate-500 font-bold">MoMo System</p>
+                <p class="text-2xl font-bold text-emerald-600 mt-1">READY</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 4: FULL SALES LOGS -->
         <div id="adm-tab-sales" class="adm-tab hidden">
-          <div class="bg-white p-6 rounded-2xl border border-slate-200">
-            <h4 class="font-bold mb-4">Full Order Logs</h4>
-            <div id="adm-all-sales" class="text-sm text-slate-600">No sales recorded.</div>
+          <div class="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h4 class="font-bold text-slate-900 mb-4">📜 Complete Transaction History</h4>
+            <div id="adm-all-sales" class="text-sm text-slate-600">No sales recorded yet.</div>
           </div>
         </div>
+
       </div>
     </main>
   </div>
@@ -588,8 +732,7 @@ tailwind.config = {
 // ========== CONFIG ==========
 const CONFIG = {
   adminPassword: "godfred123",
-  paystackPublicKey: "pk_live_b4f9f32059972b8a1b85cbfde64d988b9deb3f43",
-  momoApiUrl: "https://api.techlink.com.gh/v1/payment/charge"
+  paystackPublicKey: "pk_live_b4f9f32059972b8a1b85cbfde64d988b9deb3f43"
 };
 
 // ========== DEFAULT PACKAGES ==========
@@ -628,11 +771,18 @@ const defaultPackages = {
   ]
 };
 
+// Initialize State & Track Visits
 let saved = localStorage.getItem('gdhub_prices');
 let packages = saved ? JSON.parse(saved) : JSON.parse(JSON.stringify(defaultPackages));
 let activeNetwork = null;
 let orders = JSON.parse(localStorage.getItem('gdhub_orders') || '[]');
 let currentPurchase = null;
+
+// Engagement Tracking
+let pageVisits = parseInt(localStorage.getItem('gdhub_visits') || '0') + 1;
+localStorage.setItem('gdhub_visits', pageVisits);
+let chatInteractions = parseInt(localStorage.getItem('gdhub_chat_count') || '0');
+let feedbackCount = parseInt(localStorage.getItem('gdhub_feedback_count') || '0');
 
 // ========== LEGAL POLICY MODAL FUNCTIONS ==========
 function openPolicyModal(type) {
@@ -644,73 +794,22 @@ function openPolicyModal(type) {
     title.innerText = '📜 Terms of Service';
     content.innerHTML = `
       <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
-      
       <h4 class="font-bold text-white text-base mt-3">1. Overview</h4>
-      <p>Godfred Data Hub provides instant internet data bundle top-up services for major mobile networks in Ghana, including MTN, Telecel, and AirtelTigo. By placing an order on our platform, you agree to these Terms of Service.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">2. Service Delivery & Fulfillment</h4>
-      <p>Data top-ups are processed automatically upon successful payment confirmation through Mobile Money. Deliveries typically take between a few seconds and 15 minutes. During peak times or network operator maintenance, delivery may experience minor delays.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">3. User Responsibilities</h4>
-      <p>You are solely responsible for providing the correct recipient mobile phone number and selecting the corresponding network provider. Godfred Data Hub is not responsible for failed top-ups or data sent to wrong numbers due to customer entry error.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">4. Pricing & Payments</h4>
-      <p>All prices are listed in Ghana Cedi (GH₵) and include applicable processing fees. Prices are subject to change without prior notice based on telecom operator tariff adjustments.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">5. Limitation of Liability</h4>
-      <p>Godfred Data Hub is a third-party data distributor and is not responsible for network outages, signal coverage issues, or data expiration rules set by MTN, Telecel, or AirtelTigo.</p>
+      <p>Godfred Data Hub provides instant internet data bundle top-up services for major mobile networks in Ghana, including MTN, Telecel, and AirtelTigo.</p>
+      <h4 class="font-bold text-white text-base mt-3">2. Delivery & Fulfillment</h4>
+      <p>Data top-ups are processed automatically upon payment confirmation.</p>
     `;
   } else if (type === 'refund') {
-    title.innerText = '🔄 Refund & Cancellation Policy';
-    content.innerHTML = `
-      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">1. Digital Goods Exemption</h4>
-      <p>Due to the instant digital nature of mobile data top-ups, all successful top-up transactions are final and non-reversible once delivered to the specified phone number.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">2. Eligible Refund Conditions</h4>
-      <p>You are entitled to a full refund under the following circumstances:</p>
-      <ul class="list-disc pl-5 space-y-1 my-2">
-        <li><strong>Unfulfilled Orders:</strong> Payment was deducted from your account, but the data bundle was not delivered within 24 hours due to a system error.</li>
-        <li><strong>Duplicate Payments:</strong> You were charged twice for a single order due to a payment processing error.</li>
-      </ul>
-      
-      <h4 class="font-bold text-white text-base mt-3">3. Non-Refundable Scenarios</h4>
-      <p>Refunds will not be issued if an incorrect phone number was provided during checkout and the data was successfully credited to that number, or if the wrong network provider was selected.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">4. How to Request a Refund</h4>
-      <p>To request a refund, contact our support team via our official WhatsApp Channel or Telegram group with your phone number, payment reference, and transaction date. Verified refunds will be credited back to your original Mobile Money account within 24 to 48 hours.</p>
-    `;
+    title.innerText = '🔄 Refund Policy';
+    content.innerHTML = `<p>All successful top-ups are final. Unfulfilled orders due to system error are refunded within 24-48 hours.</p>`;
   } else if (type === 'privacy') {
     title.innerText = '🔒 Privacy Policy';
-    content.innerHTML = `
-      <p class="text-xs text-gray-400">Effective Date: September 2026 | Godfred Data Hub</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">1. Information We Collect</h4>
-      <p>To process and deliver your data orders, we collect minimal necessary information, including:</p>
-      <ul class="list-disc pl-5 space-y-1 my-2">
-        <li>Recipient phone number and Mobile Money account number.</li>
-        <li>Payment reference, date, and order status.</li>
-        <li>Customer support messages and feedback ratings.</li>
-      </ul>
-      
-      <h4 class="font-bold text-white text-base mt-3">2. How We Use Your Information</h4>
-      <p>Your information is used strictly to deliver data top-ups to your designated phone number, process secure payments via Paystack/MoMo, verify transaction logs, and provide customer assistance.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">3. Data Security & Third-Party Sharing</h4>
-      <p>We do not sell, trade, or rent customer personal information to any third parties. All financial payments are securely processed through encrypted payment providers (Paystack). We do not store Mobile Money PINs or credit card details.</p>
-      
-      <h4 class="font-bold text-white text-base mt-3">4. Contact & Inquiries</h4>
-      <p>If you have questions regarding your data privacy or wish to request data deletion, please contact us via our WhatsApp or Telegram channels.</p>
-    `;
+    content.innerHTML = `<p>We strictly collect minimal details necessary to fulfill top-ups and process payments securely.</p>`;
   }
-  
   modal.classList.remove('hidden');
 }
 
-function closePolicyModal() {
-  document.getElementById('policy-modal').classList.add('hidden');
-}
+function closePolicyModal() { document.getElementById('policy-modal').classList.add('hidden'); }
 
 // ========== TOAST NOTIFICATION SYSTEM ==========
 function showToast(msg, type = 'info') {
@@ -731,8 +830,7 @@ function showToast(msg, type = 'info') {
 // ========== CONFETTI ANIMATION ==========
 function triggerConfetti() {
   const canvas = document.createElement('canvas');
-  canvas.style.position = 'fixed';
-  canvas.style.top = '0'; canvas.style.left = '0';
+  canvas.style.position = 'fixed'; canvas.style.top = '0'; canvas.style.left = '0';
   canvas.style.width = '100vw'; canvas.style.height = '100vh';
   canvas.style.pointerEvents = 'none'; canvas.style.zIndex = '99999';
   document.body.appendChild(canvas);
@@ -766,12 +864,11 @@ function triggerConfetti() {
   draw();
 }
 
-// ========== ROTATING PROMO BANNER & TICKER ==========
+// ========== TICKERS & BANNERS ==========
 const promoTips = [
   "💡 Tip: Fast automated delivery 24/7!",
   "⚡ Orders are processed automatically within 5 minutes!",
-  "🎁 Special discount on 10GB & 20GB bundles today!",
-  "📱 Works on all unlocked SIMs & router devices!"
+  "🎁 Special discount on 10GB & 20GB bundles today!"
 ];
 let promoIdx = 0;
 setInterval(() => {
@@ -779,19 +876,14 @@ setInterval(() => {
   if (el) {
     promoIdx = (promoIdx + 1) % promoTips.length;
     el.style.opacity = '0';
-    setTimeout(() => {
-      el.textContent = promoTips[promoIdx];
-      el.style.opacity = '1';
-    }, 400);
+    setTimeout(() => { el.textContent = promoTips[promoIdx]; el.style.opacity = '1'; }, 400);
   }
 }, 5000);
 
 const tickerItems = [
   "Kwame bought 5GB MTN · 2m ago",
   "Ama bought 2GB Telecel · 4m ago",
-  "Kofi bought 10GB AirtelTigo · 6m ago",
-  "Abena bought 50GB MTN · 9m ago",
-  "Yaw bought 1GB Telecel · 12m ago"
+  "Kofi bought 10GB AirtelTigo · 6m ago"
 ];
 let tickerIdx = 0;
 setInterval(() => {
@@ -799,14 +891,11 @@ setInterval(() => {
   if (el) {
     tickerIdx = (tickerIdx + 1) % tickerItems.length;
     el.style.opacity = '0';
-    setTimeout(() => {
-      el.textContent = "🔥 " + tickerItems[tickerIdx];
-      el.style.opacity = '1';
-    }, 400);
+    setTimeout(() => { el.textContent = "🔥 " + tickerItems[tickerIdx]; el.style.opacity = '1'; }, 400);
   }
 }, 4000);
 
-// ========== RENDER PACKAGES WITH SKELETON & BADGES ==========
+// ========== RENDER PACKAGES ==========
 function renderPackages() {
   const container = document.getElementById('packages-container');
   if (!activeNetwork) {
@@ -814,13 +903,10 @@ function renderPackages() {
     return;
   }
 
-  container.innerHTML = Array(8).fill(0).map(() => `
-    <div class="h-36 rounded-2xl shimmer-skeleton border border-white/5"></div>
-  `).join('');
+  container.innerHTML = Array(6).fill(0).map(() => `<div class="h-36 rounded-2xl shimmer-skeleton border border-white/5"></div>`).join('');
 
   setTimeout(() => {
     const list = packages[activeNetwork];
-
     container.innerHTML = list.map((pkg, idx) => `
       <div class="package-card bg-white/5 rounded-2xl overflow-hidden border border-white/10 text-center p-4 flex flex-col justify-between relative shadow-lg">
         ${pkg.badge === 'popular' ? '<div class="absolute top-2 right-2 badge-pop">🔥 POPULAR</div>' : ''}
@@ -835,12 +921,12 @@ function renderPackages() {
         </div>
 
         <button onclick="startPurchase('${activeNetwork}', ${idx})" 
-          class="w-full bg-primary hover:bg-primary/90 font-bold py-2.5 rounded-xl text-sm transition-all shadow-md hover:scale-[1.02]">
+          class="w-full bg-primary hover:bg-primary/90 font-bold py-2.5 rounded-xl text-sm transition-all shadow-md hover:scale-[1.02] text-white">
           Buy Bundle
         </button>
       </div>
     `).join('');
-  }, 250);
+  }, 200);
 }
 
 document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -904,36 +990,23 @@ function initiatePayment() {
     return;
   }
 
-  // Paystack Pop Checkout Integration
   const handler = PaystackPop.setup({
     key: CONFIG.paystackPublicKey,
     email: `${momoNumber}@godfreddatahub.com`,
-    amount: Math.round(parseFloat(currentPurchase.package.price) * 100), // Amount in Pesewas (1 GH₵ = 100 pesewas)
+    amount: Math.round(parseFloat(currentPurchase.package.price) * 100),
     currency: 'GHS',
     ref: currentPurchase.orderId,
     channels: ['mobile_money', 'card'],
-    metadata: {
-      custom_fields: [
-        { display_name: "Recipient Phone", variable_name: "recipient_phone", value: currentPurchase.phone },
-        { display_name: "MoMo Paying Number", variable_name: "momo_number", value: momoNumber },
-        { display_name: "Network", variable_name: "network", value: currentPurchase.network },
-        { display_name: "Package Size", variable_name: "package", value: currentPurchase.package.size }
-      ]
-    },
     callback: function(response) {
       showToast('✅ Paystack Payment Confirmed! Ref: ' + response.reference, 'success');
       document.getElementById('pay-step-1').classList.add('hidden');
       document.getElementById('pay-step-2').classList.remove('hidden');
       document.getElementById('confirm-amount').textContent = currentPurchase.package.price;
       document.getElementById('confirm-ref').textContent = response.reference;
-      
       verifyPayment();
     },
-    onClose: function() {
-      showToast('⚠️ Paystack payment popup closed.', 'error');
-    }
+    onClose: function() { showToast('⚠️ Paystack payment window closed.', 'error'); }
   });
-
   handler.openIframe();
 }
 
@@ -950,8 +1023,6 @@ function verifyPayment() {
   orders.unshift(order);
   localStorage.setItem('gdhub_orders', JSON.stringify(orders));
   
-  tickerItems.unshift(`${order.number.substring(0,3)}***${order.number.slice(-2)} bought ${currentPurchase.package.size} ${currentPurchase.network.toUpperCase()} · Just now`);
-  
   triggerConfetti();
   showToast(`✅ Delivered! ${currentPurchase.package.size} sent to ${currentPurchase.phone}`, 'success');
   showPurchaseAlert(order);
@@ -966,7 +1037,7 @@ function showPurchaseAlert(order) {
   setTimeout(() => alertBox.classList.add('hidden'), 5000);
 }
 
-// ========== TRACK ORDER & HISTORY ==========
+// ========== ORDER TRACKING ==========
 function checkOrderStatus() {
   const num = document.getElementById('track-number').value.trim();
   const matches = orders.filter(o => o.number.includes(num));
@@ -979,7 +1050,7 @@ function checkOrderStatus() {
   }
   resultDiv.classList.remove('hidden');
   resultDiv.innerHTML = `
-    <div class="mb-2 font-bold text-xs text-emerald-400 uppercase tracking-wider">Welcome Back! Recent Orders</div>
+    <div class="mb-2 font-bold text-xs text-emerald-400 uppercase tracking-wider">Recent Orders</div>
     <div class="space-y-2">
       ${matches.slice(0, 3).map(o => `
         <div class="p-3.5 rounded-xl bg-white/5 border border-white/10 text-left">
@@ -996,11 +1067,10 @@ function checkOrderStatus() {
 
 // ========== FAQ ==========
 const faqs = [
-  {q: "How fast is delivery?", a: "Data is delivered automatically via direct network integration within 5 minutes of payment."},
-  {q: "Which MoMo networks are supported?", a: "MTN MoMo, Telecel Cash, and AirtelTigo Money are all fully supported."},
-  {q: "Can I buy for another person?", a: "Yes! Simply enter the recipient's phone number in the number box before clicking Buy."}
+  {q: "How fast is delivery?", a: "Data is delivered automatically within 5 minutes of payment."},
+  {q: "Which MoMo networks are supported?", a: "MTN MoMo, Telecel Cash, and AirtelTigo Money are all fully supported."}
 ];
-document.getElementById('faq-container').innerHTML = faqs.map((f, i) => `
+document.getElementById('faq-container').innerHTML = faqs.map(f => `
   <div class="bg-white/5 p-5 rounded-2xl border border-white/10">
     <p class="font-bold text-lg mb-1">${f.q}</p>
     <p class="text-gray-300 text-sm">${f.a}</p>
@@ -1017,68 +1087,34 @@ document.querySelectorAll('.rating-star').forEach(star => {
     });
   });
 });
+
 function submitFeedback() {
   if (!selectedRating || !document.getElementById('feedback-text').value.trim()) {
-    showToast('⚠️ Please choose a star rating and leave a comment', 'error'); return;
+    showToast('⚠️ Please select a rating and comment', 'error'); return;
   }
+  feedbackCount++;
+  localStorage.setItem('gdhub_feedback_count', feedbackCount);
   showToast('✅ Thank you for rating us!', 'success');
   document.getElementById('feedback-msg').classList.remove('hidden');
   document.getElementById('feedback-text').value = '';
 }
 
-// ========== SMART AI CHATBOT ENGINE ==========
+// ========== AI CHATBOT ENGINE ==========
 function toggleChat() { document.getElementById('chat-box').classList.toggle('hidden'); }
-
-function getBotAnswer(query) {
-  const q = query.toLowerCase().trim();
-
-  if (q.includes('time') || q.includes('fast') || q.includes('speed') || q.includes('how long') || q.includes('when') || q.includes('delay') || q.includes('deliver')) {
-    return "⚡ All data packages are delivered directly to your phone **within 5 minutes** of payment confirmation!";
-  }
-
-  if (q.includes('price') || q.includes('cost') || q.includes('rate') || q.includes('1gb') || q.includes('2gb') || q.includes('5gb') || q.includes('10gb') || q.includes('cheap') || q.includes('package')) {
-    return "💰 Our data rates are super affordable:\n• **1GB**: ~GH₵5.00 - GH₵6.00\n• **5GB**: ~GH₵18.50 - GH₵22.00\n• **10GB**: ~GH₵32.00 - GH₵38.00\nClick on any network tab (MTN, Telecel, AirtelTigo) to see full prices!";
-  }
-
-  if (q.includes('how to buy') || q.includes('how to order') || q.includes('buy data') || q.includes('steps') || q.includes('process')) {
-    return "📱 How to place an order:\n1. Type the recipient phone number in the input box.\n2. Click your network tab (MTN, AirtelTigo, or Telecel).\n3. Select your bundle & click 'Buy Bundle'.\n4. Enter your MoMo number & confirm PIN on your phone!";
-  }
-
-  if (q.includes('pay') || q.includes('momo') || q.includes('payment') || q.includes('money') || q.includes('method') || q.includes('prompt')) {
-    return "💳 We support **MTN MoMo**, **Telecel Cash**, and **AirtelTigo Money**. You will receive an instant MoMo prompt on your mobile phone to approve the payment.";
-  }
-
-  if (q.includes('track') || q.includes('status') || q.includes('where is my data') || q.includes('history') || q.includes('order status')) {
-    return "🔍 You can track your order status anytime!\nScroll down to the **Track Your Order** section, type in your phone number, and click 'Check Order History'.";
-  }
-
-  if (q.includes('telegram') || q.includes('whatsapp') || q.includes('support') || q.includes('human') || q.includes('contact') || q.includes('help') || q.includes('agent') || q.includes('channel')) {
-    return "💬 Need direct human support?\n• **Telegram Channel**: [t.me/godfreddatahub](https://t.me/godfreddatahub)\n• **WhatsApp Channel**: Join our official WhatsApp channel using the green button in the hero header!";
-  }
-
-  if (q.includes('network') || q.includes('mtn') || q.includes('telecel') || q.includes('airteltigo') || q.includes('vodafone')) {
-    return "📶 We support top-ups for **MTN**, **Telecel** (formerly Vodafone), and **AirtelTigo** across all regions in Ghana!";
-  }
-
-  if (q.includes('hi') || q.includes('hello') || q.includes('hey') || q.includes('good morning') || q.includes('good afternoon') || q.includes('good evening')) {
-    return "👋 Hello! Welcome to Godfred Data Hub. How can I help you today? Ask me about delivery speed, package prices, tracking orders, or payment methods!";
-  }
-
-  return "🤖 I'm here to assist you! You can ask me:\n• 'How fast is delivery?'\n• 'What are the data prices?'\n• 'How do I pay with MoMo?'\n• 'How do I track my order?'\n• 'What is the Telegram channel?'";
-}
 
 function sendChat() {
   const input = document.getElementById('chat-input');
   const msg = input.value.trim();
   if (!msg) return;
 
-  const container = document.getElementById('chat-messages');
+  chatInteractions++;
+  localStorage.setItem('gdhub_chat_count', chatInteractions);
 
+  const container = document.getElementById('chat-messages');
   const userDiv = document.createElement('div');
   userDiv.className = 'text-right my-1.5';
   userDiv.innerHTML = `<span class="inline-block bg-primary text-white text-xs sm:text-sm px-3.5 py-2 rounded-2xl rounded-tr-none max-w-[85%] text-left shadow-md">${escapeHtml(msg)}</span>`;
   container.appendChild(userDiv);
-
   input.value = '';
   container.scrollTop = container.scrollHeight;
 
@@ -1092,10 +1128,15 @@ function sendChat() {
   }, 400);
 }
 
+function getBotAnswer(q) {
+  const query = q.toLowerCase();
+  if (query.includes('price') || query.includes('cost')) return "💰 Data rates start from GH₵1.00 for 100MB up to GH₵150.00 for 50GB. Select a network tab to view current prices!";
+  if (query.includes('fast') || query.includes('time') || query.includes('deliver')) return "⚡ Data bundles are sent within 5 minutes of payment confirmation!";
+  return "👋 Hi! You can ask me about data prices, delivery times, or how to pay with MoMo.";
+}
+
 function escapeHtml(text) {
-  const div = document.createElement('div');
-  div.innerText = text;
-  return div.innerHTML;
+  const div = document.createElement('div'); div.innerText = text; return div.innerHTML;
 }
 
 // ========== SECRET ADMIN ACCESS HANDLERS ==========
@@ -1105,7 +1146,6 @@ let logoClickTimer = null;
 function handleLogoClick(e) {
   logoClickCount++;
   clearTimeout(logoClickTimer);
-  
   if (logoClickCount >= 5) {
     e.preventDefault();
     openAdmin();
@@ -1118,9 +1158,7 @@ function handleLogoClick(e) {
 
 document.addEventListener('keydown', function(e) {
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === 'a') {
-    e.preventDefault();
-    openAdmin();
-    showToast('🔑 Secret Admin Access Triggered', 'info');
+    e.preventDefault(); openAdmin(); showToast('🔑 Secret Admin Access Triggered', 'info');
   }
 });
 
@@ -1128,20 +1166,53 @@ document.addEventListener('keydown', function(e) {
 function openAdmin() { document.getElementById('admin-modal').classList.remove('hidden'); }
 function closeAdmin() { document.getElementById('admin-modal').classList.add('hidden'); }
 
+function verifyAdmin() {
+  if (document.getElementById('admin-pass').value === CONFIG.adminPassword) {
+    document.getElementById('admin-login').classList.add('hidden');
+    document.getElementById('admin-panel').classList.remove('hidden');
+    renderAdminPriceEditor();
+    updateAdminDashboard();
+  } else {
+    showToast('❌ Incorrect admin password', 'error');
+  }
+}
+
+function switchAdminTab(tab) {
+  document.querySelectorAll('.adm-tab').forEach(t => t.classList.add('hidden'));
+  document.getElementById('adm-tab-' + tab).classList.remove('hidden');
+}
+
 function renderAdminPriceEditor() {
   const container = document.getElementById('price-editor');
   if (!container) return;
 
   let html = '';
   for (const net in packages) {
-    html += `<div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-      <h5 class="font-bold text-slate-800 uppercase mb-3">${net}</h5>`;
+    html += `
+      <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+        <h5 class="font-bold text-slate-900 uppercase tracking-wider mb-3 text-sm border-b pb-2 flex justify-between items-center">
+          <span>${net} Network</span>
+          <span class="text-[10px] bg-slate-200 px-2 py-0.5 rounded text-slate-600">${packages[net].length} packages</span>
+        </h5>`;
+    
     packages[net].forEach((pkg, idx) => {
       html += `
-        <div class="flex items-center gap-2 mb-2">
-          <span class="text-xs font-bold w-16">${pkg.size}</span>
-          <input type="number" step="0.5" id="price-${net}-${idx}" value="${pkg.price}" 
-            class="w-full px-2 py-1 text-sm border rounded outline-none focus:border-emerald-500">
+        <div class="p-2 bg-white rounded-lg mb-2 border border-slate-100 shadow-sm text-xs space-y-1">
+          <div class="flex justify-between items-center font-bold text-slate-800">
+            <span>${pkg.size}</span>
+          </div>
+          <div class="grid grid-cols-2 gap-2 pt-1">
+            <div>
+              <label class="text-[10px] text-slate-400 font-semibold block">Selling Price (GH₵)</label>
+              <input type="number" step="0.5" id="price-${net}-${idx}" value="${pkg.price}" 
+                class="w-full px-2 py-1 text-xs border rounded outline-none focus:border-emerald-500 bg-slate-50 font-bold">
+            </div>
+            <div>
+              <label class="text-[10px] text-slate-400 font-semibold block">Cost Price (GH₵)</label>
+              <input type="number" step="0.5" id="cost-${net}-${idx}" value="${pkg.cost || (pkg.price * 0.7).toFixed(2)}" 
+                class="w-full px-2 py-1 text-xs border rounded outline-none focus:border-emerald-500 bg-slate-50">
+            </div>
+          </div>
         </div>`;
     });
     html += `</div>`;
@@ -1152,57 +1223,106 @@ function renderAdminPriceEditor() {
 function saveAllPrices() {
   for (const net in packages) {
     packages[net].forEach((pkg, idx) => {
-      const input = document.getElementById(`price-${net}-${idx}`);
-      if (input) pkg.price = parseFloat(input.value).toFixed(2);
+      const priceInput = document.getElementById(`price-${net}-${idx}`);
+      const costInput = document.getElementById(`cost-${net}-${idx}`);
+      if (priceInput) pkg.price = parseFloat(priceInput.value).toFixed(2);
+      if (costInput) pkg.cost = parseFloat(costInput.value).toFixed(2);
     });
   }
   localStorage.setItem('gdhub_prices', JSON.stringify(packages));
   renderPackages();
-  showToast('✅ Package prices updated successfully!', 'success');
+  updateAdminDashboard();
+  showToast('✅ Prices & costs saved to store!', 'success');
 }
 
-function updateAdminStats() {
-  const salesCount = orders.length;
+function updateAdminDashboard() {
   let totalRevenue = 0;
+  let totalCost = 0;
+  let netCounts = { mtn: 0, telecel: 0, airteltigo: 0 };
 
   orders.forEach(o => {
     const parts = o.package.split('— GH₵');
-    if (parts[1]) totalRevenue += parseFloat(parts[1]);
+    if (parts[1]) {
+      const price = parseFloat(parts[1]);
+      totalRevenue += price;
+      
+      const net = o.network ? o.network.toLowerCase() : 'mtn';
+      netCounts[net] = (netCounts[net] || 0) + 1;
+
+      // Match cost
+      const pkgSize = o.package.split('—')[0].trim();
+      const matched = packages[net] ? packages[net].find(p => p.size === pkgSize) : null;
+      if (matched && matched.cost) {
+        totalCost += parseFloat(matched.cost);
+      } else {
+        totalCost += price * 0.70;
+      }
+    }
   });
 
-  document.getElementById('adm-stat-sales').textContent = salesCount;
-  document.getElementById('adm-stat-packages').textContent = salesCount;
-  document.getElementById('adm-stat-profit').textContent = (totalRevenue * 0.15).toFixed(2);
+  const netProfit = totalRevenue - totalCost;
+  const margin = totalRevenue > 0 ? ((netProfit / totalRevenue) * 100).toFixed(1) : '0.0';
 
+  // Stats Display
+  document.getElementById('adm-stat-sales').textContent = orders.length;
+  document.getElementById('adm-stat-revenue').textContent = totalRevenue.toFixed(2);
+  document.getElementById('adm-stat-profit').textContent = netProfit.toFixed(2);
+  document.getElementById('adm-stat-margin').textContent = margin;
+  document.getElementById('adm-stat-visitors').textContent = pageVisits;
+
+  // Engagement Tab Data
+  document.getElementById('eng-page-views').textContent = pageVisits;
+  document.getElementById('eng-chat-count').textContent = chatInteractions;
+  document.getElementById('eng-feedback-count').textContent = feedbackCount;
+  
+  const conversionRate = pageVisits > 0 ? ((orders.length / pageVisits) * 100).toFixed(1) : '0.0';
+  document.getElementById('eng-conversion-rate').textContent = conversionRate;
+
+  // Network Sales Breakdown
+  const totalSales = orders.length || 1;
+  document.getElementById('net-count-mtn').textContent = `${netCounts.mtn} sales`;
+  document.getElementById('net-count-telecel').textContent = `${netCounts.telecel} sales`;
+  document.getElementById('net-count-airteltigo').textContent = `${netCounts.airteltigo} sales`;
+
+  document.getElementById('net-bar-mtn').style.width = `${(netCounts.mtn / totalSales) * 100}%`;
+  document.getElementById('net-bar-telecel').style.width = `${(netCounts.telecel / totalSales) * 100}%`;
+  document.getElementById('net-bar-airteltigo').style.width = `${(netCounts.airteltigo / totalSales) * 100}%`;
+
+  // Order Logs Display
   const logContainer = document.getElementById('adm-recent-orders');
   const allSalesContainer = document.getElementById('adm-all-sales');
-  
+
   if (orders.length > 0) {
-    const orderLogsHtml = orders.map(o => `
-      <div class="py-2 border-b border-slate-100 flex justify-between items-center">
-        <div><strong>${o.number}</strong> (${o.network.toUpperCase()}) - ${o.package}</div>
-        <span class="text-xs text-slate-400">${o.delivered}</span>
+    const logsHtml = orders.map(o => `
+      <div class="py-2.5 px-3 rounded-lg bg-slate-50 border border-slate-200 flex justify-between items-center text-xs">
+        <div>
+          <span class="font-bold text-slate-800">${o.number}</span> 
+          <span class="uppercase bg-slate-200 px-1.5 py-0.5 rounded text-[10px] font-semibold text-slate-700 ml-1">${o.network}</span>
+          <p class="text-slate-500 mt-0.5">${o.package}</p>
+        </div>
+        <div class="text-right">
+          <span class="text-emerald-600 font-bold uppercase block">${o.status}</span>
+          <span class="text-[10px] text-slate-400">${o.delivered}</span>
+        </div>
       </div>
     `).join('');
-    if (logContainer) logContainer.innerHTML = orderLogsHtml;
-    if (allSalesContainer) allSalesContainer.innerHTML = orderLogsHtml;
+
+    if (logContainer) logContainer.innerHTML = logsHtml;
+    if (allSalesContainer) allSalesContainer.innerHTML = logsHtml;
   }
 }
 
-function verifyAdmin() {
-  if (document.getElementById('admin-pass').value === CONFIG.adminPassword) {
-    document.getElementById('admin-login').classList.add('hidden');
-    document.getElementById('admin-panel').classList.remove('hidden');
+function clearAllData() {
+  if (confirm("Are you sure you want to reset all saved prices and sales logs?")) {
+    localStorage.removeItem('gdhub_orders');
+    localStorage.removeItem('gdhub_prices');
+    orders = [];
+    packages = JSON.parse(JSON.stringify(defaultPackages));
+    renderPackages();
+    updateAdminDashboard();
     renderAdminPriceEditor();
-    updateAdminStats();
-  } else {
-    showToast('❌ Incorrect admin password', 'error');
+    showToast('⚠️ All store data reset to defaults.', 'info');
   }
-}
-
-function switchAdminTab(tab) {
-  document.querySelectorAll('.adm-tab').forEach(t => t.classList.add('hidden'));
-  document.getElementById('adm-tab-' + tab).classList.remove('hidden');
 }
 
 // ========== AUTOLOAD PREFERENCES ==========
@@ -1221,14 +1341,12 @@ window.onload = function() {
   if (btn) btn.click();
 
   const urlParams = new URLSearchParams(window.location.search);
-  if (urlParams.get('admin') === 'true') {
-    openAdmin();
-  }
+  if (urlParams.get('admin') === 'true') { openAdmin(); }
 };
 
 function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
 
-// ========== 3D CANVAS ANIMATION SETUP ==========
+// 3D Canvas Background
 if (document.body.dataset.theme !== 'light') {
   const container = document.getElementById('canvas-container');
   if (container) {
@@ -1241,14 +1359,9 @@ if (document.body.dataset.theme !== 'light') {
     const geometry = new THREE.BufferGeometry();
     const count = 180;
     const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) {
-      positions[i] = (Math.random() - 0.5) * 30;
-    }
+    for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 30;
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const points = new THREE.Points(
-      geometry, 
-      new THREE.PointsMaterial({ color: 0x165DFF, size: 0.15 })
-    );
+    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x165DFF, size: 0.15 }));
     scene.add(points);
     camera.position.z = 15;
 
@@ -1259,12 +1372,6 @@ if (document.body.dataset.theme !== 'light') {
       renderer.render(scene, camera);
     }
     animate();
-
-    window.addEventListener('resize', () => {
-      camera.aspect = window.innerWidth / 500;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, 500);
-    });
   }
 }
 </script>
