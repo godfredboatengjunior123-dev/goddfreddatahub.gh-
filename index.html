@@ -1227,29 +1227,43 @@ window.onload = function() {
 
 function toggleMobileMenu() { document.getElementById('mobile-menu').classList.toggle('hidden'); }
 
-// 3D Canvas setup
+// ========== 3D CANVAS ANIMATION SETUP ==========
 if (document.body.dataset.theme !== 'light') {
   const container = document.getElementById('canvas-container');
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(60, window.innerWidth / 500, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-  renderer.setSize(window.innerWidth, 500);
   if (container) {
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / 500, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+    renderer.setSize(window.innerWidth, 500);
     container.appendChild(renderer.domElement);
+    
     const geometry = new THREE.BufferGeometry();
     const count = 180;
     const positions = new Float32Array(count * 3);
-    for (let i = 0; i < count * 3; i++) positions[i] = (Math.random() - 0.5) * 30;
+    for (let i = 0; i < count * 3; i++) {
+      positions[i] = (Math.random() - 0.5) * 30;
+    }
     geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    const points = new THREE.Points(geometry, new THREE.PointsMaterial({ color: 0x165DFF, size: 0.12, transparent: true, opacity: 0.6 }));
+    const points = new THREE.Points(
+      geometry, 
+      new THREE.PointsMaterial({ color: 0x165DFF, size: 0.15 })
+    );
     scene.add(points);
-    camera.position.z = 10;
+    camera.position.z = 15;
+
     function animate() {
       requestAnimationFrame(animate);
-      points.rotation.x += 0.0005; points.rotation.y += 0.001;
+      points.rotation.y += 0.002;
+      points.rotation.x += 0.001;
       renderer.render(scene, camera);
     }
     animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / 500;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, 500);
+    });
   }
 }
 </script>
